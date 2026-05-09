@@ -46,7 +46,7 @@ const firebaseConfig = {
 // ============================================================
 //  🔧 TA CLÉ GROQ — remplace par ta vraie clé gsk_...
 // ============================================================
-const GROQ_API_KEY = "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"; // ← mets ta clé gsk_...
+const GROQ_API_KEY = "REMPLACE_PAR_TA_CLE_GROQ"; // ← mets ta clé gsk_...
 
 // ---- Init Firebase ----
 const app = initializeApp(firebaseConfig);
@@ -381,6 +381,7 @@ window.analyzeFocus = async function () {
 
 Tâches : ${tasks.map((t, i) => `${i + 1}. ${t}`).join("\n")}`);
     body.textContent = r;
+    checkUrgentTasks(r);
     await saveAnalysis("focus", `Focus — ${new Date().toLocaleDateString("fr-FR")}`, `${tasks.length} tâche(s) organisée(s)`, r);
   } catch (e) {
     body.innerHTML = `<span style="color:var(--accent2)">Erreur : ${e.message}</span>`;
@@ -652,5 +653,77 @@ document.getElementById("email-input")?.addEventListener("input", function () {
   document.getElementById("email-chars").textContent = this.value.length;
 });
 
-// Init
+// ============================================================
+//  🌙 MODE CLAIR / SOMBRE
+// ============================================================
+window.toggleTheme = function() {
+  const isDark = document.body.classList.toggle("light-mode");
+  localStorage.setItem("theme", isDark ? "light" : "dark");
+  document.getElementById("theme-icon").textContent = isDark ? "☀️" : "🌙";
+};
+
+function initTheme() {
+  const saved = localStorage.getItem("theme");
+  if (saved === "light") {
+    document.body.classList.add("light-mode");
+    const icon = document.getElementById("theme-icon");
+    if (icon) icon.textContent = "☀️";
+  }
+}
+
+// ============================================================
+//  🔔 NOTIFICATIONS TÂCHES URGENTES
+// ============================================================
+async function requestNotifPermission() {
+  if (!("Notification" in window)) return;
+  if (Notification.permission === "default") {
+    await Notification.requestPermission();
+  }
+}
+
+function sendNotif(title, body) {
+  if (Notification.permission === "granted") {
+    new Notification(title, {
+      body,
+      icon: "https://workmate-gamma.vercel.app/favicon.ico"
+    });
+  }
+}
+
+// Détecte les tâches urgentes après FocusBot et notifie
+function checkUrgentTasks(result) {
+  if (!result) return;
+  const lines = result.split("\n");
+  const urgentTasks = [];
+  let inUrgent = false;
+  for (const line of lines) {
+    if (line.includes("PRIORITÉ ABSOLUE")) { inUrgent = true; continue; }
+    if (line.includes("IMPORTANT") || line.includes("PEUT ATTENDRE") || line.includes("CONSEIL")) { inUrgent = false; }
+    if (inUrgent && line.trim().startsWith("•")) {
+      urgentTasks.push(line.trim().replace("•", "").trim());
+    }
+  }
+  if (urgentTasks.length > 0) {
+    sendNotif("🎯 WorkMate — Tâche urgente !", urgentTasks[0].slice(0, 80));
+  }
+}
+
+// ============================================================
+//  📱 MENU MOBILE
+// ============================================================
+window.toggleMobileMenu = function() {
+  document.querySelector(".sidebar").classList.toggle("mobile-open");
+  document.getElementById("mobile-overlay").classList.toggle("active");
+};
+
+window.closeMobileMenu = function() {
+  document.querySelector(".sidebar").classList.remove("mobile-open");
+  document.getElementById("mobile-overlay").classList.remove("active");
+};
+
+// ============================================================
+//  INIT
+// ============================================================
+initTheme();
+requestNotifPermission();
 showPage("landing");
