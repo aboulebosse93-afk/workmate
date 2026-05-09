@@ -249,7 +249,18 @@ window.analyzeReunion = async function () {
   body.innerHTML = loadingHTML();
   try {
     const r = await callGroq(`Analyse ces notes de réunion et structure ta réponse EXACTEMENT ainsi :
-
+window.analyzeReunion = async function () {
+  const text = document.getElementById("reunion-input").value.trim();
+  const agenda = document.getElementById("reunion-agenda").value.trim();
+  if (!text) return alert("Colle tes notes d'abord !");
+  const box = document.getElementById("reunion-result");
+  const body = document.getElementById("reunion-body");
+  box.classList.add("visible");
+  body.innerHTML = loadingHTML();
+  try {
+    const agendaText = agenda ? `\n\nOrdre du jour prévu :\n${agenda}` : "";
+    const r = await callGroq(`Analyse ces notes de réunion et structure ta réponse EXACTEMENT ainsi :
+    
 📋 DÉCISIONS PRISES
 • [décisions claires, une par ligne]
 
