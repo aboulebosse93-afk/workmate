@@ -46,7 +46,7 @@ const firebaseConfig = {
 // ============================================================
 //  🔧 TA CLÉ GROQ — remplace par ta vraie clé gsk_...
 // ============================================================
-const GROQ_API_KEY = "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"; // ← mets ta clé gsk_...
+const GROQ_API_KEY = "REMPLACE_PAR_TA_CLE_GROQ"; // ← mets ta clé gsk_...
 
 // ---- Init Firebase ----
 const app = initializeApp(firebaseConfig);
@@ -559,6 +559,95 @@ function translateError(code) {
 document.getElementById("reunion-input")?.addEventListener("input", function () {
   document.getElementById("reunion-chars").textContent = this.value.length;
 });
+
+// ============================================================
+//  🎙️ ENREGISTREMENT VOCAL — ReunionZero
+// ============================================================
+let recognition = null;
+let isRecording = false;
+let fullTranscript = "";
+
+window.switchReunionMode = function(mode) {
+  document.getElementById("reunion-mode-texte").style.display = mode === "texte" ? "block" : "none";
+  document.getElementById("reunion-mode-micro").style.display = mode === "micro" ? "block" : "none";
+  document.getElementById("mode-btn-texte").classList.toggle("active", mode === "texte");
+  document.getElementById("mode-btn-micro").classList.toggle("active", mode === "micro");
+  if (mode !== "micro" && isRecording) stopRecording();
+};
+
+window.toggleRecording = function() {
+  if (isRecording) {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+};
+
+function startRecording() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    alert("Ton navigateur ne supporte pas la reconnaissance vocale. Utilise Chrome !");
+    return;
+  }
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = "fr-FR";
+
+  fullTranscript = document.getElementById("reunion-transcript").value;
+
+  recognition.onstart = () => {
+    isRecording = true;
+    document.getElementById("btn-record").textContent = "⏹️ Arrêter l'écoute";
+    document.getElementById("btn-record").style.background = "var(--accent2)";
+    document.getElementById("micro-status-text").textContent = "🔴 Écoute en cours...";
+    document.getElementById("mic-waves").style.display = "flex";
+  };
+
+  recognition.onresult = (event) => {
+    let interim = "";
+    let final = "";
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      if (event.results[i].isFinal) {
+        final += event.results[i][0].transcript + " ";
+      } else {
+        interim += event.results[i][0].transcript;
+      }
+    }
+    if (final) fullTranscript += final;
+    document.getElementById("reunion-transcript").value = fullTranscript + interim;
+  };
+
+  recognition.onerror = (e) => {
+    console.error("Erreur micro:", e.error);
+    if (e.error === "not-allowed") alert("Autorise l'accès au micro dans ton navigateur !");
+    stopRecording();
+  };
+
+  recognition.onend = () => {
+    if (isRecording) recognition.start(); // restart automatiquement
+  };
+
+  recognition.start();
+}
+
+function stopRecording() {
+  isRecording = false;
+  if (recognition) { recognition.onend = null; recognition.stop(); }
+  document.getElementById("btn-record").textContent = "🎙️ Démarrer l'écoute";
+  document.getElementById("btn-record").style.background = "var(--accent3)";
+  document.getElementById("micro-status-text").textContent = "✅ Enregistrement terminé";
+  document.getElementById("mic-waves").style.display = "none";
+}
+
+window.analyzeTranscript = async function() {
+  const text = document.getElementById("reunion-transcript").value.trim();
+  if (!text) return alert("Lance d'abord l'écoute pour capturer la réunion !");
+  // On copie la transcription dans le champ texte et on analyse
+  document.getElementById("reunion-input").value = text;
+  switchReunionMode("texte");
+  await analyzeReunion();
+};
 document.getElementById("email-input")?.addEventListener("input", function () {
   document.getElementById("email-chars").textContent = this.value.length;
 });
