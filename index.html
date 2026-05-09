@@ -172,6 +172,7 @@
       <button class="sidebar-item" id="sb-reunion" onclick="switchView('reunion')"><span class="sidebar-icon">💼</span> ReunionZero</button>
       <button class="sidebar-item" id="sb-email" onclick="switchView('email')"><span class="sidebar-icon">📧</span> MailTon</button>
       <button class="sidebar-item" id="sb-focus" onclick="switchView('focus')"><span class="sidebar-icon">🧩</span> FocusBot</button>
+      <button class="sidebar-item" id="sb-emails" onclick="switchView('emails')"><span class="sidebar-icon">📬</span> AssistantEmail</button>
       <div class="sidebar-section">Mon compte</div>
       <button class="sidebar-item" id="sb-history" onclick="switchView('history')"><span class="sidebar-icon">🕐</span> Historique</button>
       <button class="sidebar-item" id="sb-profile" onclick="switchView('profile')"><span class="sidebar-icon">👤</span> Profil</button>
@@ -217,6 +218,8 @@
         <div class="tool-card">
           <div class="tool-card-label">Notes de réunion</div>
           <textarea class="tool-textarea" id="reunion-input" placeholder="Colle ici tes notes de réunion, compte-rendu ou email récapitulatif..."></textarea>
+          <div class="tool-card-label" style="margin-top:1rem">Ordre du jour (optionnel)</div>
+          <textarea class="tool-textarea" id="reunion-agenda" placeholder="Ex: 1. Budget Q2  2. Recrutement  3. Lancement produit..." style="min-height:80px;"></textarea>
           <div class="tool-actions">
             <div class="char-info"><span id="reunion-chars">0</span> caractères</div>
             <button class="btn-run" onclick="analyzeReunion()">Analyser →</button>
@@ -270,6 +273,28 @@
             <div class="result-actions"><button class="result-btn" onclick="copyEl('focus-body')">Copier</button></div>
           </div>
           <div class="result-body" id="focus-body"></div>
+        </div>
+      </div>
+
+      <!-- EMAILS ASSISTANT -->
+      <div class="app-view" id="view-emails">
+        <div class="tool-header"><div class="tool-title">📬 AssistantEmail</div><div class="tool-desc">Colle tes emails — l'IA les trie par importance et trouve ceux que tu cherches</div></div>
+        <div class="tool-card">
+          <div class="tool-card-label">Tes emails (colle-les ici)</div>
+          <textarea class="tool-textarea" id="emails-input" placeholder="Colle ici tes emails (expéditeur, sujet, contenu)..." style="min-height:180px;"></textarea>
+          <div class="tool-card-label" style="margin-top:1rem">Ce que tu cherches (optionnel)</div>
+          <input type="text" class="task-input" id="emails-critere" placeholder="Ex: emails de mon client Dupont, factures en retard, urgent...">
+          <div class="tool-actions" style="margin-top:1rem">
+            <div></div>
+            <button class="btn-run" style="background:var(--accent4);color:#0a0a0f;box-shadow:0 0 15px rgba(247,183,49,.2)" onclick="analyzeEmails()">📬 Trier mes emails →</button>
+          </div>
+        </div>
+        <div class="result-box" id="emails-result">
+          <div class="result-header">
+            <div class="result-label">Résultat du tri</div>
+            <div class="result-actions"><button class="result-btn" onclick="copyEl('emails-body')">Copier</button></div>
+          </div>
+          <div class="result-body" id="emails-body"></div>
         </div>
       </div>
 
