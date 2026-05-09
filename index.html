@@ -208,7 +208,8 @@
         <div class="topbar-title" id="topbar-title">Dashboard</div>
         <div class="topbar-right">
           <div class="plan-badge" id="usage-badge">Plan Gratuit</div>
-          <button class="notif-btn">🔔</button>
+          <button class="notif-btn" onclick="toggleTheme()" title="Mode clair/sombre"><span id="theme-icon">🌙</span></button>
+          <button class="notif-btn mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
         </div>
       </div>
 
@@ -459,5 +460,12 @@
 
 <!-- Firebase SDK -->
 <script type="module" src="app.js"></script>
+<!-- Mobile overlay -->
+<div id="mobile-overlay" onclick="closeMobileMenu()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9"></div>
+<script>
+document.getElementById('mobile-overlay').addEventListener('click', closeMobileMenu);
+// Show overlay properly
+const origToggle = window.toggleMobileMenu;
+</script>
 </body>
 </html>
