@@ -6,6 +6,23 @@
 <title>WorkMate — IA Productivité</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<style>
+.mode-selector{display:flex;gap:.6rem;margin-bottom:1rem}
+.mode-btn{background:var(--surface);border:1px solid var(--border);color:var(--text2);padding:.6rem 1.2rem;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.85rem;cursor:pointer;transition:all .2s}
+.mode-btn:hover{border-color:var(--border2);color:var(--text)}
+.mode-btn.active{background:rgba(124,111,255,0.15);border-color:var(--accent);color:var(--accent)}
+.micro-status{display:flex;align-items:center;gap:1rem;padding:1.5rem;background:var(--surface2);border-radius:12px;margin-bottom:1rem}
+.micro-icon{font-size:2rem}
+#micro-status-text{font-size:.9rem;color:var(--text2)}
+.mic-waves{display:flex;align-items:center;gap:4px;justify-content:center;margin-bottom:1rem;height:40px}
+.wave{width:4px;border-radius:2px;background:var(--accent3);animation:wave 1s ease-in-out infinite}
+.wave:nth-child(1){height:10px;animation-delay:0s}
+.wave:nth-child(2){height:20px;animation-delay:.1s}
+.wave:nth-child(3){height:35px;animation-delay:.2s}
+.wave:nth-child(4){height:20px;animation-delay:.3s}
+.wave:nth-child(5){height:10px;animation-delay:.4s}
+@keyframes wave{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.8)}}
+</style>
 </head>
 <body>
 
@@ -214,17 +231,48 @@
 
       <!-- REUNION -->
       <div class="app-view" id="view-reunion">
-        <div class="tool-header"><div class="tool-title">💼 ReunionZero</div><div class="tool-desc">Colle tes notes — l'IA en extrait l'essentiel en secondes</div></div>
-        <div class="tool-card">
-          <div class="tool-card-label">Notes de réunion</div>
-          <textarea class="tool-textarea" id="reunion-input" placeholder="Colle ici tes notes de réunion, compte-rendu ou email récapitulatif..."></textarea>
-          <div class="tool-card-label" style="margin-top:1rem">Ordre du jour (optionnel)</div>
-          <textarea class="tool-textarea" id="reunion-agenda" placeholder="Ex: 1. Budget Q2  2. Recrutement  3. Lancement produit..." style="min-height:80px;"></textarea>
-          <div class="tool-actions">
-            <div class="char-info"><span id="reunion-chars">0</span> caractères</div>
-            <button class="btn-run" onclick="analyzeReunion()">Analyser →</button>
+        <div class="tool-header"><div class="tool-title">💼 ReunionZero</div><div class="tool-desc">Écoute ta réunion en direct ou colle tes notes — l'IA fait le reste</div></div>
+
+        <!-- MODE SELECTOR -->
+        <div class="mode-selector">
+          <button class="mode-btn active" id="mode-btn-texte" onclick="switchReunionMode('texte')">✍️ Coller des notes</button>
+          <button class="mode-btn" id="mode-btn-micro" onclick="switchReunionMode('micro')">🎙️ Écouter en direct</button>
+        </div>
+
+        <!-- MODE TEXTE -->
+        <div id="reunion-mode-texte">
+          <div class="tool-card">
+            <div class="tool-card-label">Notes de réunion</div>
+            <textarea class="tool-textarea" id="reunion-input" placeholder="Colle ici tes notes de réunion, compte-rendu ou email récapitulatif..."></textarea>
+            <div class="tool-card-label" style="margin-top:1rem">Ordre du jour (optionnel)</div>
+            <textarea class="tool-textarea" id="reunion-agenda" placeholder="Ex: 1. Budget Q2  2. Recrutement  3. Lancement produit..." style="min-height:80px;"></textarea>
+            <div class="tool-actions">
+              <div class="char-info"><span id="reunion-chars">0</span> caractères</div>
+              <button class="btn-run" onclick="analyzeReunion()">Analyser →</button>
+            </div>
           </div>
         </div>
+
+        <!-- MODE MICRO -->
+        <div id="reunion-mode-micro" style="display:none">
+          <div class="tool-card">
+            <div class="tool-card-label">Écoute en direct</div>
+            <div class="micro-status" id="micro-status">
+              <div class="micro-icon" id="micro-icon">🎙️</div>
+              <div id="micro-status-text">Prêt à écouter</div>
+            </div>
+            <div class="mic-waves" id="mic-waves" style="display:none">
+              <div class="wave"></div><div class="wave"></div><div class="wave"></div><div class="wave"></div><div class="wave"></div>
+            </div>
+            <div class="tool-card-label" style="margin-top:1rem">Transcription en direct</div>
+            <textarea class="tool-textarea" id="reunion-transcript" placeholder="La transcription apparaîtra ici pendant que tu parles..." style="min-height:140px;" readonly></textarea>
+            <div class="tool-actions" style="margin-top:1rem">
+              <button class="btn-run" id="btn-record" onclick="toggleRecording()" style="background:var(--accent3);color:#0a0a0f">🎙️ Démarrer l'écoute</button>
+              <button class="btn-run" onclick="analyzeTranscript()" style="margin-left:.5rem">Analyser →</button>
+            </div>
+          </div>
+        </div>
+
         <div class="result-box" id="reunion-result">
           <div class="result-header">
             <div class="result-label">Résultat</div>
