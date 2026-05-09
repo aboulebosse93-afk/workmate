@@ -9,6 +9,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
@@ -70,6 +72,15 @@ onAuthStateChanged(auth, async (user) => {
     switchView("dashboard");
     loadDashboard();
   } else {
+    // Vérifie si on revient d'une redirection Google
+    try {
+      const result = await getRedirectResult(auth);
+      if (result && result.user) {
+        // Géré par onAuthStateChanged automatiquement
+      }
+    } catch (e) {
+      console.error("Redirect error:", e);
+    }
     currentUser = null;
     showPage("landing");
   }
@@ -445,7 +456,12 @@ window.doSignup = async function () {
 };
 
 window.doGoogleLogin = async function () {
-  try { await signInWithPopup(auth, googleProvider); } catch (e) { console.error(e); }
+  try {
+    await signInWithRedirect(auth, googleProvider);
+  } catch (e) {
+    console.error("Google login error:", e);
+    alert("Erreur Google : " + e.message);
+  }
 };
 
 window.doLogout = async function () { await signOut(auth); };
