@@ -46,7 +46,7 @@ const firebaseConfig = {
 // ============================================================
 //  🔧 TA CLÉ GROQ — remplace par ta vraie clé gsk_...
 // ============================================================
-const GROQ_API_KEY = "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";
+const GROQ_API_KEY = "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"; // ← mets ta clé gsk_...
 
 // ---- Init Firebase ----
 const app = initializeApp(firebaseConfig);
@@ -242,16 +242,7 @@ async function callGroq(prompt) {
 // ============================================================
 window.analyzeReunion = async function () {
   const text = document.getElementById("reunion-input").value.trim();
-  if (!text) return alert("Colle tes notes d'abord !");
-  const box = document.getElementById("reunion-result");
-  const body = document.getElementById("reunion-body");
-  box.classList.add("visible");
-  body.innerHTML = loadingHTML();
-  try {
-    const r = await callGroq(`Analyse ces notes de réunion et structure ta réponse EXACTEMENT ainsi :
-window.analyzeReunion = async function () {
-  const text = document.getElementById("reunion-input").value.trim();
-  const agenda = document.getElementById("reunion-agenda").value.trim();
+  const agenda = document.getElementById("reunion-agenda") ? document.getElementById("reunion-agenda").value.trim() : "";
   if (!text) return alert("Colle tes notes d'abord !");
   const box = document.getElementById("reunion-result");
   const body = document.getElementById("reunion-body");
@@ -260,12 +251,15 @@ window.analyzeReunion = async function () {
   try {
     const agendaText = agenda ? `\n\nOrdre du jour prévu :\n${agenda}` : "";
     const r = await callGroq(`Analyse ces notes de réunion et structure ta réponse EXACTEMENT ainsi :
-    
+
 📋 DÉCISIONS PRISES
 • [décisions claires, une par ligne]
 
 ✅ TÂCHES À FAIRE
 • [Tâche] — Responsable : [nom si mentionné] — Deadline : [si mentionnée]
+
+📅 ORDRE DU JOUR — POINTS TRAITÉS
+• [vérifie si chaque point de l'ordre du jour a été traité, ou "Pas d'ordre du jour fourni" si absent]
 
 ❓ POINTS FLOUS À CLARIFIER
 • [ambiguïtés ou questions non résolues]
@@ -273,9 +267,49 @@ window.analyzeReunion = async function () {
 💡 RECOMMANDATION
 [une recommandation rapide pour le suivi]
 
-Notes : ${text}`);
+Notes : ${text}${agendaText}`);
     body.textContent = r;
     await saveAnalysis("reunion", `Réunion — ${text.slice(0, 40)}...`, "Analyse complète", r);
+  } catch (e) {
+    body.innerHTML = `<span style="color:var(--accent2)">Erreur : ${e.message}</span>`;
+  }
+};
+
+// ============================================================
+//  OUTIL 4 — ASSISTANT EMAIL (tri et recherche)
+// ============================================================
+window.analyzeEmails = async function () {
+  const emails = document.getElementById("emails-input").value.trim();
+  const critere = document.getElementById("emails-critere").value.trim();
+  if (!emails) return alert("Colle tes emails d'abord !");
+  const box = document.getElementById("emails-result");
+  const body = document.getElementById("emails-body");
+  box.classList.add("visible");
+  body.innerHTML = loadingHTML();
+  try {
+    const critereText = critere ? `\n\nCritère de recherche/tri : ${critere}` : "";
+    const r = await callGroq(`Tu es un assistant expert en gestion d'emails. Analyse ces emails et structure ta réponse EXACTEMENT ainsi :
+
+🔴 URGENT — À traiter aujourd'hui
+• [Email] — De : [expéditeur] — Sujet : [sujet] — Pourquoi urgent : [raison]
+
+🟡 IMPORTANT — À traiter cette semaine
+• [Email] — De : [expéditeur] — Sujet : [sujet]
+
+🟢 INFO — Pas d'action requise
+• [Email] — De : [expéditeur] — Sujet : [sujet]
+
+🗑️ PEUT ÊTRE IGNORÉ
+• [Email] — Raison : [pourquoi pas important]
+
+📌 RÉSUMÉ
+[résumé en 2-3 phrases des points les plus importants]
+
+${critere ? `🔍 RÉSULTAT DE LA RECHERCHE "${critere}"\n[emails correspondant au critère]` : ""}
+
+Emails : ${emails}${critereText}`);
+    body.textContent = r;
+    await saveAnalysis("email", `Tri emails — ${new Date().toLocaleDateString("fr-FR")}`, "Emails triés et analysés", r);
   } catch (e) {
     body.innerHTML = `<span style="color:var(--accent2)">Erreur : ${e.message}</span>`;
   }
@@ -474,7 +508,7 @@ window.toggleAuth = function (mode) {
 
 const viewTitles = {
   dashboard: "Dashboard", reunion: "💼 ReunionZero", email: "📧 MailTon",
-  focus: "🧩 FocusBot", history: "🕐 Historique", profile: "👤 Profil", "pricing-app": "⚡ Passer au Pro"
+  focus: "🧩 FocusBot", emails: "📬 AssistantEmail", history: "🕐 Historique", profile: "👤 Profil", "pricing-app": "⚡ Passer au Pro"
 };
 
 window.switchView = function (name) {
