@@ -48,13 +48,14 @@ const firebaseConfig = {
 // ============================================================
 //  🔧 TA CLÉ GROQ — remplace par ta vraie clé gsk_...
 // ============================================================
-const GROQ_API_KEY = "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"; // ← mets ta clé gsk_...
+const GROQ_API_KEY = "REMPLACE_PAR_TA_CLE_GROQ"; // ← mets ta clé gsk_...
 
 // ---- Init Firebase ----
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
+googleProvider.addScope("https://www.googleapis.com/auth/gmail.readonly");
 
 // ---- State ----
 let currentUser = null;
@@ -457,10 +458,24 @@ window.doSignup = async function () {
 
 window.doGoogleLogin = async function () {
   try {
-    await signInWithRedirect(auth, googleProvider);
+    // Essaie d'abord avec popup
+    const result = await signInWithPopup(auth, googleProvider);
+    if (result.user) return;
   } catch (e) {
-    console.error("Google login error:", e);
-    alert("Erreur Google : " + e.message);
+    if (e.code === "auth/popup-blocked" || e.code === "auth/cancelled-popup-request") {
+      // Si popup bloquée, essaie la redirection
+      try {
+        await signInWithRedirect(auth, googleProvider);
+      } catch (e2) {
+        console.error(e2);
+        alert("La connexion Google n'est pas disponible. Utilise email + mot de passe à la place !");
+      }
+    } else if (e.code === "auth/popup-closed-by-user") {
+      // L'utilisateur a fermé la popup, on ne fait rien
+    } else {
+      console.error("Google login error:", e);
+      alert("Erreur Google (" + e.code + "). Utilise email + mot de passe !");
+    }
   }
 };
 
@@ -670,8 +685,112 @@ document.getElementById("email-input")?.addEventListener("input", function () {
 });
 
 // ============================================================
-//  🌙 MODE CLAIR / SOMBRE
+//  📬 GMAIL — Lecture et analyse des emails
 // ============================================================
+let gmailAccessToken = null;
+
+window.connectGmail = async function() {
+  try {
+    const provider = new GoogleAuthProvider();
+    provider.addScope("https://www.googleapis.com/auth/gmail.readonly");
+    const result = await signInWithPopup(auth, provider);
+    const credential = GoogleAuthProvider.credentialFromResult(result);
+    gmailAccessToken = credential.accessToken;
+    localStorage.setItem("gmail_token", gmailAccessToken);
+    document.getElementById("gmail-connect-btn").style.display = "none";
+    document.getElementById("gmail-connected").style.display = "flex";
+    document.getElementById("gmail-user").textContent = result.user.email;
+  } catch(e) {
+    console.error("Gmail connect error:", e);
+    alert("Erreur connexion Gmail : " + e.message);
+  }
+};
+
+window.loadGmailEmails = async function() {
+  const token = gmailAccessToken || localStorage.getItem("gmail_token");
+  if (!token) return alert("Connecte d'abord ton Gmail !");
+
+  const typeInclure = document.getElementById("gmail-inclure").value.trim();
+  const typeExclure = document.getElementById("gmail-exclure").value.trim();
+  const box = document.getElementById("gmail-result");
+  const body = document.getElementById("gmail-body");
+  box.classList.add("visible");
+  body.innerHTML = loadingHTML();
+
+  try {
+    // Récupère les emails via la fonction Vercel
+    const res = await fetch("/api/gmail", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ accessToken: token, maxEmails: 20 })
+    });
+    const data = await res.json();
+
+    if (!data.emails || data.emails.length === 0) {
+      body.textContent = "Aucun email trouvé.";
+      return;
+    }
+
+    // Formate les emails pour l'IA
+    const emailsText = data.emails.map((e, i) =>
+      `Email ${i+1}:\nDe: ${e.from}\nObjet: ${e.subject}\nDate: ${e.date}\nAperçu: ${e.snippet}`
+    ).join("\n\n---\n\n");
+
+    const filtreText = `
+${typeInclure ? `Types d'emails à INCLURE/prioriser : ${typeInclure}` : ""}
+${typeExclure ? `Types d'emails à IGNORER/exclure : ${typeExclure}` : ""}`.trim();
+
+    const r = await callGroq(`Tu es un assistant expert en gestion d'emails. Analyse ces ${data.emails.length} emails Gmail et structure ta réponse EXACTEMENT ainsi :
+
+🔴 URGENT — À traiter aujourd'hui
+• [Email] — De : [expéditeur] — Objet : [objet] — Pourquoi urgent : [raison]
+
+🟡 IMPORTANT — À traiter cette semaine  
+• [Email] — De : [expéditeur] — Objet : [objet]
+
+🟢 INFO — Pas d'action requise
+• [Email] — De : [expéditeur] — Objet : [objet]
+
+🗑️ IGNORÉ (selon tes préférences)
+• [Email ignoré selon les critères]
+
+📌 RÉSUMÉ
+[résumé en 2-3 phrases des points les plus importants]
+
+${filtreText}
+
+Emails :
+${emailsText}`);
+
+    body.textContent = r;
+    await saveAnalysis("email", `Gmail — ${new Date().toLocaleDateString("fr-FR")}`, `${data.emails.length} emails analysés`, r);
+  } catch(e) {
+    if (e.message.includes("401") || e.message.includes("403")) {
+      gmailAccessToken = null;
+      localStorage.removeItem("gmail_token");
+      document.getElementById("gmail-connect-btn").style.display = "block";
+      document.getElementById("gmail-connected").style.display = "none";
+      body.innerHTML = `<span style="color:var(--accent2)">Session expirée. Reconnecte ton Gmail.</span>`;
+    } else {
+      body.innerHTML = `<span style="color:var(--accent2)">Erreur : ${e.message}</span>`;
+    }
+  }
+};
+window.switchEmailMode = function(mode) {
+  document.getElementById("email-mode-manuel").style.display = mode === "manuel" ? "block" : "none";
+  document.getElementById("email-mode-gmail").style.display = mode === "gmail" ? "block" : "none";
+  document.getElementById("mode-btn-email-manuel").classList.toggle("active", mode === "manuel");
+  document.getElementById("mode-btn-email-gmail").classList.toggle("active", mode === "gmail");
+  if (mode === "gmail") {
+    const token = localStorage.getItem("gmail_token");
+    if (token) {
+      gmailAccessToken = token;
+      document.getElementById("gmail-connect-btn").style.display = "none";
+      document.getElementById("gmail-connected").style.display = "flex";
+    }
+  }
+};
+
 window.toggleTheme = function() {
   const isDark = document.body.classList.toggle("light-mode");
   localStorage.setItem("theme", isDark ? "light" : "dark");
