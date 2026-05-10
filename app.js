@@ -48,7 +48,7 @@ const firebaseConfig = {
 // ============================================================
 //  🔧 TA CLÉ GROQ — remplace par ta vraie clé gsk_...
 // ============================================================
-const GROQ_API_KEY = "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"; // ← mets ta clé gsk_...
+const GROQ_API_KEY = "REMPLACE_PAR_TA_CLE_GROQ"; // ← mets ta clé gsk_...
 
 // ---- Init Firebase ----
 const app = initializeApp(firebaseConfig);
@@ -540,7 +540,7 @@ window.toggleAuth = function (mode) {
 
 const viewTitles = {
   dashboard: "Dashboard", reunion: "💼 ReunionZero", email: "📧 MailTon",
-  focus: "🧩 FocusBot", emails: "📬 AssistantEmail", history: "🕐 Historique", profile: "👤 Profil", "pricing-app": "⚡ Passer au Pro"
+  focus: "🧩 FocusBot", history: "🕐 Historique", profile: "👤 Profil"
 };
 
 window.switchView = function (name) {
@@ -715,14 +715,14 @@ window.loadGmailEmails = async function() {
   const box = document.getElementById("gmail-result");
   const body = document.getElementById("gmail-body");
   box.classList.add("visible");
-  body.innerHTML = loadingHTML();
+  body.innerHTML = `<div class="loading-row"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span>Lecture de tous tes emails... ça peut prendre quelques secondes !</span></div>`;
 
   try {
     // Récupère les emails via la fonction Vercel
     const res = await fetch("/api/gmail", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ accessToken: token, maxEmails: 20 })
+      body: JSON.stringify({ accessToken: token, maxEmails: 200 })
     });
     const data = await res.json();
 
@@ -740,7 +740,7 @@ window.loadGmailEmails = async function() {
 ${typeInclure ? `Types d'emails à INCLURE/prioriser : ${typeInclure}` : ""}
 ${typeExclure ? `Types d'emails à IGNORER/exclure : ${typeExclure}` : ""}`.trim();
 
-    const r = await callGroq(`Tu es un assistant expert en gestion d'emails. Analyse ces ${data.emails.length} emails Gmail et structure ta réponse EXACTEMENT ainsi :
+    const r = await callGroq(`Tu es un assistant expert en gestion d'emails. Analyse ces ${data.emails.length} emails Gmail (sur ${data.total || data.emails.length} au total) et structure ta réponse EXACTEMENT ainsi :
 
 🔴 URGENT — À traiter aujourd'hui
 • [Email] — De : [expéditeur] — Objet : [objet] — Pourquoi urgent : [raison]
