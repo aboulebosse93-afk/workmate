@@ -32,6 +32,7 @@
     <div class="logo">Work<span>Mate</span></div>
     <ul class="nav-links">
       <li><a href="#features">Fonctionnalités</a></li>
+      <li><a href="#pricing">Tarifs</a></li>
     </ul>
     <div class="nav-cta">
       <button class="btn-ghost" onclick="showAuth('login')">Se connecter</button>
@@ -59,6 +60,7 @@
     <div class="feat-card">
       <div class="feat-icon fi-red">📧</div>
       <div class="feat-title">MailTon</div>
+      <div class="feat-title">MailTonS</div>
       <div class="feat-desc">Décris ta situation pro délicate et reçois 3 versions d'email au ton parfait.</div>
     </div>
     <div class="feat-card">
@@ -68,10 +70,60 @@
     </div>
   </div>
 
+  <section class="pricing-section" id="pricing">
+    <div class="section-title">Simple et transparent</div>
+    <div class="section-sub">Commence gratuitement, passe au Pro quand tu es prêt.</div>
+    <div class="pricing-cards">
+      <div class="price-card">
+        <div class="price-plan">Gratuit</div>
+        <div class="price-amount">0€ <span>/ mois</span></div>
+        <div class="price-period">Pour toujours</div>
+        <ul class="price-features">
+          <li><span class="check">✓</span> 10 analyses / mois</li>
+          <li><span class="check">✓</span> Tous les outils</li>
+          <li><span class="check">✓</span> Historique 7 jours</li>
+          <li><span class="cross">✕</span> Export PDF</li>
+          <li><span class="cross">✕</span> Intégrations Slack</li>
+          <li><span class="cross">✕</span> Support prioritaire</li>
+        </ul>
+        <button class="btn-plan" onclick="showAuth('signup')">Commencer gratuitement</button>
+      </div>
+      <div class="price-card popular">
+        <div class="popular-badge">⚡ Populaire</div>
+        <div class="price-plan">Pro</div>
+        <div class="price-amount">12€ <span>/ mois</span></div>
+        <div class="price-period">Facturé mensuellement</div>
+        <ul class="price-features">
+          <li><span class="check">✓</span> Analyses illimitées</li>
+          <li><span class="check">✓</span> Tous les outils</li>
+          <li><span class="check">✓</span> Historique illimité</li>
+          <li><span class="check">✓</span> Export PDF & Word</li>
+          <li><span class="check">✓</span> Intégrations Slack, Notion</li>
+          <li><span class="check">✓</span> Support prioritaire</li>
+        </ul>
+        <button class="btn-plan primary" onclick="showAuth('signup')">Essayer 14 jours gratuits</button>
+      </div>
+      <div class="price-card">
+        <div class="price-plan">Équipe</div>
+        <div class="price-amount">39€ <span>/ mois</span></div>
+        <div class="price-period">Jusqu'à 10 membres</div>
+        <ul class="price-features">
+          <li><span class="check">✓</span> Tout du plan Pro</li>
+          <li><span class="check">✓</span> Dashboard équipe</li>
+          <li><span class="check">✓</span> Partage de résultats</li>
+          <li><span class="check">✓</span> Admin centralisé</li>
+          <li><span class="check">✓</span> SSO / SAML</li>
+          <li><span class="check">✓</span> SLA garanti</li>
+        </ul>
+        <button class="btn-plan" onclick="showAuth('signup')">Contacter les ventes</button>
+      </div>
+    </div>
+  </section>
+
   <footer class="land-footer">
     <div class="logo">Work<span>Mate</span></div>
     <ul class="footer-links">
-      <li><a href="#">Confidentialité</a></li>
+      <li><a href="/privacy.html">Confidentialité</a></li>
       <li><a href="#">CGU</a></li>
       <li><a href="#">Contact</a></li>
     </ul>
@@ -97,6 +149,11 @@
         <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="login-email" placeholder="toi@example.com"></div>
         <div class="form-group"><label class="form-label">Mot de passe</label><input type="password" class="form-input" id="login-pass" placeholder="••••••••"></div>
         <button class="btn-submit" id="btn-login" onclick="doLogin()">Se connecter →</button>
+        <div class="auth-divider"><span>ou</span></div>
+        <button class="btn-social" onclick="doGoogleLogin()">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#fbbc05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Continuer avec Google
+        </button>
         <div class="auth-switch">Pas encore de compte ? <a href="#" onclick="toggleAuth('signup')">S'inscrire</a></div>
         <div style="text-align:center;margin-top:.8rem"><a href="#" onclick="doResetPassword()" style="color:var(--text2);font-size:.8rem;text-decoration:none">Mot de passe oublié ?</a></div>
       </div>
@@ -112,6 +169,11 @@
         <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="signup-email" placeholder="toi@example.com"></div>
         <div class="form-group"><label class="form-label">Mot de passe</label><input type="password" class="form-input" id="signup-pass" placeholder="Min. 8 caractères"></div>
         <button class="btn-submit" id="btn-signup" onclick="doSignup()">Créer mon compte →</button>
+        <div class="auth-divider"><span>ou</span></div>
+        <button class="btn-social" onclick="doGoogleLogin()">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#fbbc05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Continuer avec Google
+        </button>
         <div class="auth-switch">Déjà un compte ? <a href="#" onclick="toggleAuth('login')">Se connecter</a></div>
       </div>
     </div>
@@ -128,9 +190,11 @@
       <button class="sidebar-item" id="sb-reunion" onclick="switchView('reunion')"><span class="sidebar-icon">💼</span> ReunionZero</button>
       <button class="sidebar-item" id="sb-email" onclick="switchView('email')"><span class="sidebar-icon">📧</span> MailTon</button>
       <button class="sidebar-item" id="sb-focus" onclick="switchView('focus')"><span class="sidebar-icon">🧩</span> FocusBot</button>
+      <button class="sidebar-item" id="sb-emails" onclick="switchView('emails')"><span class="sidebar-icon">📬</span> AssistantEmail</button>
       <div class="sidebar-section">Mon compte</div>
       <button class="sidebar-item" id="sb-history" onclick="switchView('history')"><span class="sidebar-icon">🕐</span> Historique</button>
       <button class="sidebar-item" id="sb-profile" onclick="switchView('profile')"><span class="sidebar-icon">👤</span> Profil</button>
+      <button class="sidebar-item" id="sb-pricing-app" onclick="switchView('pricing-app')"><span class="sidebar-icon">⚡</span> Passer au Pro</button>
       <div class="sidebar-bottom">
         <button class="sidebar-item" onclick="doLogout()" style="color:var(--accent2)"><span class="sidebar-icon">↩</span> Déconnexion</button>
         <div class="user-chip">
@@ -308,6 +372,28 @@
         </div>
       </div>
 
+      <!-- EMAILS ASSISTANT -->
+      <div class="app-view" id="view-emails">
+        <div class="tool-header"><div class="tool-title">📬 AssistantEmail</div><div class="tool-desc">Colle tes emails — l'IA les trie par importance et trouve ceux que tu cherches</div></div>
+        <div class="tool-card">
+          <div class="tool-card-label">Tes emails (colle-les ici)</div>
+          <textarea class="tool-textarea" id="emails-input" placeholder="Colle ici tes emails (expéditeur, sujet, contenu)..." style="min-height:180px;"></textarea>
+          <div class="tool-card-label" style="margin-top:1rem">Ce que tu cherches (optionnel)</div>
+          <input type="text" class="task-input" id="emails-critere" placeholder="Ex: emails de mon client Dupont, factures en retard, urgent...">
+          <div class="tool-actions" style="margin-top:1rem">
+            <div></div>
+            <button class="btn-run" style="background:var(--accent4);color:#0a0a0f;box-shadow:0 0 15px rgba(247,183,49,.2)" onclick="analyzeEmails()">📬 Trier mes emails →</button>
+          </div>
+        </div>
+        <div class="result-box" id="emails-result">
+          <div class="result-header">
+            <div class="result-label">Résultat du tri</div>
+            <div class="result-actions"><button class="result-btn" onclick="copyEl('emails-body')">Copier</button></div>
+          </div>
+          <div class="result-body" id="emails-body"></div>
+        </div>
+      </div>
+
       <!-- HISTORY -->
       <div class="app-view" id="view-history">
         <div class="tool-header"><div class="tool-title">🕐 Historique</div><div class="tool-desc">Toutes tes analyses des 30 derniers jours</div></div>
@@ -347,6 +433,7 @@
                 <div class="usage-bar"><div class="usage-fill" id="usage-fill-bar"></div></div>
                 <div class="usage-text" id="usage-text-detail">—</div>
               </div>
+              <button class="btn-upgrade" onclick="switchView('pricing-app')">⚡ Passer au Pro — 12€/mois</button>
             </div>
             <div class="profile-card">
               <div class="profile-card-title">⚙️ Préférences</div>
@@ -360,6 +447,56 @@
               <button class="btn-ghost" style="width:100%;padding:.65rem;margin-top:.3rem" onclick="changePassword()">Changer le mot de passe</button>
               <div id="pass-msg" style="display:none;margin-top:.8rem;font-size:.82rem;text-align:center"></div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRICING IN APP -->
+      <div class="app-view" id="view-pricing-app">
+        <div class="tool-header"><div class="tool-title">⚡ Passer au Pro</div><div class="tool-desc">Débloquez tout le potentiel de WorkMate</div></div>
+        <div class="pricing-cards" style="max-width:800px">
+          <div class="price-card">
+            <div class="price-plan">Gratuit</div>
+            <div class="price-amount">0€ <span>/ mois</span></div>
+            <div class="price-period">Ton plan actuel</div>
+            <ul class="price-features">
+              <li><span class="check">✓</span> 10 analyses / mois</li>
+              <li><span class="check">✓</span> Tous les outils</li>
+              <li><span class="check">✓</span> Historique 30 jours</li>
+              <li><span class="cross">✕</span> Export PDF</li>
+              <li><span class="cross">✕</span> Intégrations</li>
+              <li><span class="cross">✕</span> Support prioritaire</li>
+            </ul>
+            <button class="btn-plan" disabled style="opacity:.5;cursor:default">Plan actuel ✓</button>
+          </div>
+          <div class="price-card popular">
+            <div class="popular-badge">⚡ Recommandé</div>
+            <div class="price-plan">Pro</div>
+            <div class="price-amount">12€ <span>/ mois</span></div>
+            <div class="price-period">14 jours gratuits</div>
+            <ul class="price-features">
+              <li><span class="check">✓</span> Analyses illimitées</li>
+              <li><span class="check">✓</span> Tous les outils</li>
+              <li><span class="check">✓</span> Historique illimité</li>
+              <li><span class="check">✓</span> Export PDF & Word</li>
+              <li><span class="check">✓</span> Intégrations Slack, Notion</li>
+              <li><span class="check">✓</span> Support prioritaire</li>
+            </ul>
+            <button class="btn-plan primary">Bientôt disponible</button>
+          </div>
+          <div class="price-card">
+            <div class="price-plan">Équipe</div>
+            <div class="price-amount">39€ <span>/ mois</span></div>
+            <div class="price-period">Jusqu'à 10 membres</div>
+            <ul class="price-features">
+              <li><span class="check">✓</span> Tout du plan Pro</li>
+              <li><span class="check">✓</span> Dashboard équipe</li>
+              <li><span class="check">✓</span> Partage résultats</li>
+              <li><span class="check">✓</span> Admin centralisé</li>
+              <li><span class="check">✓</span> SSO / SAML</li>
+              <li><span class="check">✓</span> SLA garanti</li>
+            </ul>
+            <button class="btn-plan">Bientôt disponible</button>
           </div>
         </div>
       </div>
