@@ -49,7 +49,6 @@ const firebaseConfig = {
 //  🔧 TA CLÉ GROQ — remplace par ta vraie clé gsk_...
 // ============================================================
 const GROQ_API_KEY = "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"; // ← mets ta clé gsk_...
-
 // ---- Init Firebase ----
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
