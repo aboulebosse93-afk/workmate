@@ -42,8 +42,8 @@ const firebaseConfig = {
   appId: "1:106648534705:web:79c1af55ebf3dbe7972c90"
 };
 
-// 🔧 REMPLACE PAR TA CLÉ GROQ
-const GROQ_API_KEY = "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";
+// 🔧 REMPLACE PAR TA CLÉ OPENROUTER (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)
+const OPENROUTER_API_KEY = "REMPLACE_PAR_TA_CLE_OPENROUTER";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -211,17 +211,19 @@ async function saveAnalysis(type, title, summary, content) {
 }
 
 // ============================================================
-//  GROQ API
+//  OPENROUTER API (100% gratuit)
 // ============================================================
 async function callGroq(prompt) {
-  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${GROQ_API_KEY}`
+      "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+      "HTTP-Referer": "https://workmate-gamma.vercel.app",
+      "X-Title": "WorkMate"
     },
     body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
+      model: "mistralai/mistral-7b-instruct:free",
       max_tokens: 1000,
       messages: [
         { role: "system", content: "Tu es un assistant de productivité expert. Tu réponds toujours en français." },
