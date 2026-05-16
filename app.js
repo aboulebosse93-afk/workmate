@@ -33,9 +33,6 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ============================================================
-//  🔧 TA CONFIG FIREBASE — remplace les valeurs ci-dessous
-// ============================================================
 const firebaseConfig = {
   apiKey: "AIzaSyClJGReIQ3s2h18HST8r6PmayeBSGJX_zw",
   authDomain: "workmate-3c68c.firebaseapp.com",
@@ -45,21 +42,19 @@ const firebaseConfig = {
   appId: "1:106648534705:web:79c1af55ebf3dbe7972c90"
 };
 
-// ============================================================
-//  🔧 TA CLÉ GROQ — remplace par ta vraie clé gsk_...
-// ============================================================
-const GROQ_API_KEY = "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"; // ← mets ta clé gsk_...
-// ---- Init Firebase ----
+// 🔧 REMPLACE PAR TA CLÉ GROQ
+const GROQ_API_KEY = "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";
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 googleProvider.addScope("https://www.googleapis.com/auth/gmail.readonly");
 
-// ---- State ----
 let currentUser = null;
 let userProfile = null;
 const tasks = [];
+let gmailAccessToken = null;
 
 // ============================================================
 //  AUTH STATE
@@ -72,15 +67,10 @@ onAuthStateChanged(auth, async (user) => {
     switchView("dashboard");
     loadDashboard();
   } else {
-    // Vérifie si on revient d'une redirection Google
     try {
       const result = await getRedirectResult(auth);
-      if (result && result.user) {
-        // Géré par onAuthStateChanged automatiquement
-      }
-    } catch (e) {
-      console.error("Redirect error:", e);
-    }
+      if (result && result.user) {}
+    } catch (e) { console.error("Redirect error:", e); }
     currentUser = null;
     showPage("landing");
   }
@@ -118,7 +108,6 @@ function updateUIWithProfile() {
   if (!userProfile) return;
   const name = `${userProfile.firstname || ""} ${userProfile.lastname || ""}`.trim() || userProfile.email;
   const initials = name.slice(0, 2).toUpperCase();
-
   document.getElementById("user-display-name").textContent = name;
   document.getElementById("user-avatar-initials").textContent = initials;
   document.getElementById("profile-name").textContent = name;
@@ -127,18 +116,15 @@ function updateUIWithProfile() {
   document.getElementById("profile-lastname").value = userProfile.lastname || "";
   document.getElementById("profile-email-input").value = userProfile.email || "";
   document.getElementById("profile-avatar").textContent = initials;
-
   const usage = userProfile.usage || {};
   const monthUsage = usage.month === currentMonth() ? (usage.total || 0) : 0;
-  const lim = 50; // Groq est gratuit, on met 50/mois
+  const lim = 50;
   const pct = Math.min((monthUsage / lim) * 100, 100);
   document.getElementById("plan-detail-text").textContent =
     `${monthUsage} analyse${monthUsage > 1 ? "s" : ""} utilisée${monthUsage > 1 ? "s" : ""} sur ${lim} ce mois`;
   document.getElementById("usage-fill-bar").style.width = pct + "%";
-  document.getElementById("usage-text-detail").textContent =
-    `${lim - monthUsage} analyses restantes ce mois`;
-  document.getElementById("usage-badge").textContent =
-    `Plan Gratuit — ${monthUsage}/${lim} analyses`;
+  document.getElementById("usage-text-detail").textContent = `${lim - monthUsage} analyses restantes ce mois`;
+  document.getElementById("usage-badge").textContent = `Plan Gratuit — ${monthUsage}/${lim} analyses`;
 }
 
 // ============================================================
@@ -167,7 +153,7 @@ async function loadHistory(limitCount = 50, targetId = "history-list") {
     );
     const snap = await getDocs(q);
     if (snap.empty) {
-      target.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--text2);font-size:.88rem">Aucune analyse pour l'instant. Utilise un outil pour commencer !</div>`;
+      target.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--text2);font-size:.88rem">Aucune analyse pour l'instant !</div>`;
       return;
     }
     const icons = {
@@ -225,7 +211,7 @@ async function saveAnalysis(type, title, summary, content) {
 }
 
 // ============================================================
-//  GROQ API (100% gratuit)
+//  GROQ API
 // ============================================================
 async function callGroq(prompt) {
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -249,11 +235,11 @@ async function callGroq(prompt) {
 }
 
 // ============================================================
-//  OUTILS
+//  REUNION
 // ============================================================
 window.analyzeReunion = async function () {
   const text = document.getElementById("reunion-input").value.trim();
-  const agenda = document.getElementById("reunion-agenda") ? document.getElementById("reunion-agenda").value.trim() : "";
+  const agenda = document.getElementById("reunion-agenda")?.value.trim() || "";
   if (!text) return alert("Colle tes notes d'abord !");
   const box = document.getElementById("reunion-result");
   const body = document.getElementById("reunion-body");
@@ -270,7 +256,7 @@ window.analyzeReunion = async function () {
 • [Tâche] — Responsable : [nom si mentionné] — Deadline : [si mentionnée]
 
 📅 ORDRE DU JOUR — POINTS TRAITÉS
-• [vérifie si chaque point de l'ordre du jour a été traité, ou "Pas d'ordre du jour fourni" si absent]
+• [vérifie si chaque point de l'ordre du jour a été traité]
 
 ❓ POINTS FLOUS À CLARIFIER
 • [ambiguïtés ou questions non résolues]
@@ -287,45 +273,8 @@ Notes : ${text}${agendaText}`);
 };
 
 // ============================================================
-//  OUTIL 4 — ASSISTANT EMAIL (tri et recherche)
+//  EMAIL
 // ============================================================
-window.analyzeEmails = async function () {
-  const emails = document.getElementById("emails-input").value.trim();
-  const critere = document.getElementById("emails-critere").value.trim();
-  if (!emails) return alert("Colle tes emails d'abord !");
-  const box = document.getElementById("emails-result");
-  const body = document.getElementById("emails-body");
-  box.classList.add("visible");
-  body.innerHTML = loadingHTML();
-  try {
-    const critereText = critere ? `\n\nCritère de recherche/tri : ${critere}` : "";
-    const r = await callGroq(`Tu es un assistant expert en gestion d'emails. Analyse ces emails et structure ta réponse EXACTEMENT ainsi :
-
-🔴 URGENT — À traiter aujourd'hui
-• [Email] — De : [expéditeur] — Sujet : [sujet] — Pourquoi urgent : [raison]
-
-🟡 IMPORTANT — À traiter cette semaine
-• [Email] — De : [expéditeur] — Sujet : [sujet]
-
-🟢 INFO — Pas d'action requise
-• [Email] — De : [expéditeur] — Sujet : [sujet]
-
-🗑️ PEUT ÊTRE IGNORÉ
-• [Email] — Raison : [pourquoi pas important]
-
-📌 RÉSUMÉ
-[résumé en 2-3 phrases des points les plus importants]
-
-${critere ? `🔍 RÉSULTAT DE LA RECHERCHE "${critere}"\n[emails correspondant au critère]` : ""}
-
-Emails : ${emails}${critereText}`);
-    body.textContent = r;
-    await saveAnalysis("email", `Tri emails — ${new Date().toLocaleDateString("fr-FR")}`, "Emails triés et analysés", r);
-  } catch (e) {
-    body.innerHTML = `<span style="color:var(--accent2)">Erreur : ${e.message}</span>`;
-  }
-};
-
 window.generateEmail = async function () {
   const text = document.getElementById("email-input").value.trim();
   if (!text) return alert("Décris ta situation d'abord !");
@@ -350,7 +299,6 @@ VERSION 3 — Ton assertif et orienté solution
 [email complet avec Objet:]
 
 Situation : ${text}`);
-
     const parts = r.split("---").map(v => v.trim()).filter(Boolean);
     vars.innerHTML = `<div class="variants">` + parts.map((v, i) => {
       const lines = v.split("\n");
@@ -368,6 +316,9 @@ Situation : ${text}`);
   }
 };
 
+// ============================================================
+//  FOCUS
+// ============================================================
 window.analyzeFocus = async function () {
   if (!tasks.length) return alert("Ajoute au moins une tâche !");
   const box = document.getElementById("focus-result");
@@ -457,22 +408,13 @@ window.doSignup = async function () {
 
 window.doGoogleLogin = async function () {
   try {
-    // Essaie d'abord avec popup
     const result = await signInWithPopup(auth, googleProvider);
     if (result.user) return;
   } catch (e) {
     if (e.code === "auth/popup-blocked" || e.code === "auth/cancelled-popup-request") {
-      // Si popup bloquée, essaie la redirection
-      try {
-        await signInWithRedirect(auth, googleProvider);
-      } catch (e2) {
-        console.error(e2);
-        alert("La connexion Google n'est pas disponible. Utilise email + mot de passe à la place !");
-      }
-    } else if (e.code === "auth/popup-closed-by-user") {
-      // L'utilisateur a fermé la popup, on ne fait rien
-    } else {
-      console.error("Google login error:", e);
+      try { await signInWithRedirect(auth, googleProvider); }
+      catch (e2) { alert("Connexion Google indisponible. Utilise email + mot de passe !"); }
+    } else if (e.code !== "auth/popup-closed-by-user") {
       alert("Erreur Google (" + e.code + "). Utilise email + mot de passe !");
     }
   }
@@ -483,7 +425,7 @@ window.doLogout = async function () { await signOut(auth); };
 window.doResetPassword = async function () {
   const email = prompt("Entre ton email :");
   if (!email) return;
-  try { await sendPasswordResetEmail(auth, email); alert("Email envoyé ! Vérifie ta boîte mail."); }
+  try { await sendPasswordResetEmail(auth, email); alert("Email envoyé !"); }
   catch (e) { alert("Erreur : " + translateError(e.code)); }
 };
 
@@ -563,6 +505,223 @@ window.filterHistory = function (btn, type) {
 };
 
 // ============================================================
+//  GMAIL
+// ============================================================
+window.connectGmail = async function() {
+  try {
+    const provider = new GoogleAuthProvider();
+    provider.addScope("https://www.googleapis.com/auth/gmail.readonly");
+    const result = await signInWithPopup(auth, provider);
+    const credential = GoogleAuthProvider.credentialFromResult(result);
+    gmailAccessToken = credential.accessToken;
+    localStorage.setItem("gmail_token", gmailAccessToken);
+    document.getElementById("gmail-connect-btn").style.display = "none";
+    document.getElementById("gmail-connected").style.display = "flex";
+    document.getElementById("gmail-user").textContent = result.user.email;
+  } catch(e) {
+    console.error("Gmail connect error:", e);
+    alert("Erreur connexion Gmail : " + e.message);
+  }
+};
+
+window.loadGmailEmails = async function() {
+  const token = gmailAccessToken || localStorage.getItem("gmail_token");
+  if (!token) return alert("Connecte d'abord ton Gmail !");
+  const typeInclure = document.getElementById("gmail-inclure").value.trim();
+  const typeExclure = document.getElementById("gmail-exclure").value.trim();
+  const box = document.getElementById("gmail-result");
+  const body = document.getElementById("gmail-body");
+  box.classList.add("visible");
+  body.innerHTML = `<div class="loading-row"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span>Lecture de tous tes emails... quelques secondes !</span></div>`;
+  try {
+    const res = await fetch("/api/gmail", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ accessToken: token, maxEmails: 200 })
+    });
+    const data = await res.json();
+    if (!data.emails || data.emails.length === 0) {
+      body.textContent = "Aucun email trouvé.";
+      return;
+    }
+    const emailsText = data.emails.map((e, i) =>
+      `Email ${i+1}:\nDe: ${e.from}\nObjet: ${e.subject}\nDate: ${e.date}\nAperçu: ${e.snippet}`
+    ).join("\n\n---\n\n");
+    const filtreText = `${typeInclure ? `Types d'emails à INCLURE : ${typeInclure}` : ""}
+${typeExclure ? `Types d'emails à IGNORER : ${typeExclure}` : ""}`.trim();
+    const r = await callGroq(`Tu es un assistant expert en gestion d'emails. Analyse ces ${data.emails.length} emails Gmail et structure ta réponse EXACTEMENT ainsi :
+
+🔴 URGENT — À traiter aujourd'hui
+• [Email] — De : [expéditeur] — Objet : [objet] — Pourquoi urgent : [raison]
+
+🟡 IMPORTANT — À traiter cette semaine
+• [Email] — De : [expéditeur] — Objet : [objet]
+
+🟢 INFO — Pas d'action requise
+• [Email] — De : [expéditeur] — Objet : [objet]
+
+🗑️ IGNORÉ (selon tes préférences)
+• [Email ignoré selon les critères]
+
+📌 RÉSUMÉ
+[résumé en 2-3 phrases des points les plus importants]
+
+${filtreText}
+
+Emails :
+${emailsText}`);
+    body.textContent = r;
+    await saveAnalysis("email", `Gmail — ${new Date().toLocaleDateString("fr-FR")}`, `${data.emails.length} emails analysés`, r);
+  } catch(e) {
+    if (e.message.includes("401") || e.message.includes("403")) {
+      gmailAccessToken = null;
+      localStorage.removeItem("gmail_token");
+      document.getElementById("gmail-connect-btn").style.display = "block";
+      document.getElementById("gmail-connected").style.display = "none";
+      body.innerHTML = `<span style="color:var(--accent2)">Session expirée. Reconnecte ton Gmail.</span>`;
+    } else {
+      body.innerHTML = `<span style="color:var(--accent2)">Erreur : ${e.message}</span>`;
+    }
+  }
+};
+
+window.switchEmailMode = function(mode) {
+  document.getElementById("email-mode-manuel").style.display = mode === "manuel" ? "block" : "none";
+  document.getElementById("email-mode-gmail").style.display = mode === "gmail" ? "block" : "none";
+  document.getElementById("mode-btn-email-manuel").classList.toggle("active", mode === "manuel");
+  document.getElementById("mode-btn-email-gmail").classList.toggle("active", mode === "gmail");
+  if (mode === "gmail") {
+    const token = localStorage.getItem("gmail_token");
+    if (token) {
+      gmailAccessToken = token;
+      document.getElementById("gmail-connect-btn").style.display = "none";
+      document.getElementById("gmail-connected").style.display = "flex";
+    }
+  }
+};
+
+// ============================================================
+//  REUNION MODE
+// ============================================================
+let recognition = null;
+let isRecording = false;
+let fullTranscript = "";
+
+window.switchReunionMode = function(mode) {
+  document.getElementById("reunion-mode-texte").style.display = mode === "texte" ? "block" : "none";
+  document.getElementById("reunion-mode-micro").style.display = mode === "micro" ? "block" : "none";
+  document.getElementById("mode-btn-texte").classList.toggle("active", mode === "texte");
+  document.getElementById("mode-btn-micro").classList.toggle("active", mode === "micro");
+  if (mode !== "micro" && isRecording) stopRecording();
+};
+
+window.toggleRecording = function() {
+  if (isRecording) stopRecording(); else startRecording();
+};
+
+function startRecording() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    alert("Utilise Chrome pour la reconnaissance vocale !");
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = "fr-FR";
+  fullTranscript = document.getElementById("reunion-transcript").value;
+  recognition.onstart = () => {
+    isRecording = true;
+    document.getElementById("btn-record").textContent = "⏹️ Arrêter l'écoute";
+    document.getElementById("btn-record").style.background = "var(--accent2)";
+    document.getElementById("micro-status-text").textContent = "🔴 Écoute en cours...";
+    document.getElementById("mic-waves").style.display = "flex";
+  };
+  recognition.onresult = (event) => {
+    let interim = "", final = "";
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      if (event.results[i].isFinal) final += event.results[i][0].transcript + " ";
+      else interim += event.results[i][0].transcript;
+    }
+    if (final) fullTranscript += final;
+    document.getElementById("reunion-transcript").value = fullTranscript + interim;
+  };
+  recognition.onerror = (e) => {
+    if (e.error === "not-allowed") alert("Autorise l'accès au micro !");
+    stopRecording();
+  };
+  recognition.onend = () => { if (isRecording) recognition.start(); };
+  recognition.start();
+}
+
+function stopRecording() {
+  isRecording = false;
+  if (recognition) { recognition.onend = null; recognition.stop(); }
+  document.getElementById("btn-record").textContent = "🎙️ Démarrer l'écoute";
+  document.getElementById("btn-record").style.background = "var(--accent3)";
+  document.getElementById("micro-status-text").textContent = "✅ Enregistrement terminé";
+  document.getElementById("mic-waves").style.display = "none";
+}
+
+window.analyzeTranscript = async function() {
+  const text = document.getElementById("reunion-transcript").value.trim();
+  if (!text) return alert("Lance d'abord l'écoute !");
+  document.getElementById("reunion-input").value = text;
+  switchReunionMode("texte");
+  await analyzeReunion();
+};
+
+// ============================================================
+//  THEME & MOBILE
+// ============================================================
+window.toggleTheme = function() {
+  const isDark = document.body.classList.toggle("light-mode");
+  localStorage.setItem("theme", isDark ? "light" : "dark");
+  document.getElementById("theme-icon").textContent = isDark ? "☀️" : "🌙";
+};
+
+function initTheme() {
+  const saved = localStorage.getItem("theme");
+  if (saved === "light") {
+    document.body.classList.add("light-mode");
+    const icon = document.getElementById("theme-icon");
+    if (icon) icon.textContent = "☀️";
+  }
+}
+
+window.toggleMobileMenu = function() {
+  document.querySelector(".sidebar").classList.toggle("mobile-open");
+  document.getElementById("mobile-overlay").classList.toggle("active");
+};
+
+window.closeMobileMenu = function() {
+  document.querySelector(".sidebar").classList.remove("mobile-open");
+  document.getElementById("mobile-overlay").classList.remove("active");
+};
+
+// ============================================================
+//  NOTIFICATIONS
+// ============================================================
+async function requestNotifPermission() {
+  if (!("Notification" in window)) return;
+  if (Notification.permission === "default") await Notification.requestPermission();
+}
+
+function checkUrgentTasks(result) {
+  if (!result) return;
+  const lines = result.split("\n");
+  let inUrgent = false;
+  for (const line of lines) {
+    if (line.includes("PRIORITÉ ABSOLUE")) { inUrgent = true; continue; }
+    if (line.includes("IMPORTANT") || line.includes("PEUT ATTENDRE") || line.includes("CONSEIL")) inUrgent = false;
+    if (inUrgent && line.trim().startsWith("•") && Notification.permission === "granted") {
+      new Notification("🎯 WorkMate — Tâche urgente !", { body: line.trim().replace("•", "").trim().slice(0, 80) });
+      break;
+    }
+  }
+}
+
+// ============================================================
 //  UTILS
 // ============================================================
 function loadingHTML() {
@@ -590,274 +749,11 @@ function translateError(code) {
 document.getElementById("reunion-input")?.addEventListener("input", function () {
   document.getElementById("reunion-chars").textContent = this.value.length;
 });
-
-// ============================================================
-//  🎙️ ENREGISTREMENT VOCAL — ReunionZero
-// ============================================================
-let recognition = null;
-let isRecording = false;
-let fullTranscript = "";
-
-window.switchReunionMode = function(mode) {
-  document.getElementById("reunion-mode-texte").style.display = mode === "texte" ? "block" : "none";
-  document.getElementById("reunion-mode-micro").style.display = mode === "micro" ? "block" : "none";
-  document.getElementById("mode-btn-texte").classList.toggle("active", mode === "texte");
-  document.getElementById("mode-btn-micro").classList.toggle("active", mode === "micro");
-  if (mode !== "micro" && isRecording) stopRecording();
-};
-
-window.toggleRecording = function() {
-  if (isRecording) {
-    stopRecording();
-  } else {
-    startRecording();
-  }
-};
-
-function startRecording() {
-  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-    alert("Ton navigateur ne supporte pas la reconnaissance vocale. Utilise Chrome !");
-    return;
-  }
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  recognition = new SpeechRecognition();
-  recognition.continuous = true;
-  recognition.interimResults = true;
-  recognition.lang = "fr-FR";
-
-  fullTranscript = document.getElementById("reunion-transcript").value;
-
-  recognition.onstart = () => {
-    isRecording = true;
-    document.getElementById("btn-record").textContent = "⏹️ Arrêter l'écoute";
-    document.getElementById("btn-record").style.background = "var(--accent2)";
-    document.getElementById("micro-status-text").textContent = "🔴 Écoute en cours...";
-    document.getElementById("mic-waves").style.display = "flex";
-  };
-
-  recognition.onresult = (event) => {
-    let interim = "";
-    let final = "";
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      if (event.results[i].isFinal) {
-        final += event.results[i][0].transcript + " ";
-      } else {
-        interim += event.results[i][0].transcript;
-      }
-    }
-    if (final) fullTranscript += final;
-    document.getElementById("reunion-transcript").value = fullTranscript + interim;
-  };
-
-  recognition.onerror = (e) => {
-    console.error("Erreur micro:", e.error);
-    if (e.error === "not-allowed") alert("Autorise l'accès au micro dans ton navigateur !");
-    stopRecording();
-  };
-
-  recognition.onend = () => {
-    if (isRecording) recognition.start(); // restart automatiquement
-  };
-
-  recognition.start();
-}
-
-function stopRecording() {
-  isRecording = false;
-  if (recognition) { recognition.onend = null; recognition.stop(); }
-  document.getElementById("btn-record").textContent = "🎙️ Démarrer l'écoute";
-  document.getElementById("btn-record").style.background = "var(--accent3)";
-  document.getElementById("micro-status-text").textContent = "✅ Enregistrement terminé";
-  document.getElementById("mic-waves").style.display = "none";
-}
-
-window.analyzeTranscript = async function() {
-  const text = document.getElementById("reunion-transcript").value.trim();
-  if (!text) return alert("Lance d'abord l'écoute pour capturer la réunion !");
-  // On copie la transcription dans le champ texte et on analyse
-  document.getElementById("reunion-input").value = text;
-  switchReunionMode("texte");
-  await analyzeReunion();
-};
 document.getElementById("email-input")?.addEventListener("input", function () {
   document.getElementById("email-chars").textContent = this.value.length;
 });
 
-// ============================================================
-//  📬 GMAIL — Lecture et analyse des emails
-// ============================================================
-let gmailAccessToken = null;
-
-window.connectGmail = async function() {
-  try {
-    const provider = new GoogleAuthProvider();
-    provider.addScope("https://www.googleapis.com/auth/gmail.readonly");
-    const result = await signInWithPopup(auth, provider);
-    const credential = GoogleAuthProvider.credentialFromResult(result);
-    gmailAccessToken = credential.accessToken;
-    localStorage.setItem("gmail_token", gmailAccessToken);
-    document.getElementById("gmail-connect-btn").style.display = "none";
-    document.getElementById("gmail-connected").style.display = "flex";
-    document.getElementById("gmail-user").textContent = result.user.email;
-  } catch(e) {
-    console.error("Gmail connect error:", e);
-    alert("Erreur connexion Gmail : " + e.message);
-  }
-};
-
-window.loadGmailEmails = async function() {
-  const token = gmailAccessToken || localStorage.getItem("gmail_token");
-  if (!token) return alert("Connecte d'abord ton Gmail !");
-
-  const typeInclure = document.getElementById("gmail-inclure").value.trim();
-  const typeExclure = document.getElementById("gmail-exclure").value.trim();
-  const box = document.getElementById("gmail-result");
-  const body = document.getElementById("gmail-body");
-  box.classList.add("visible");
-  body.innerHTML = `<div class="loading-row"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span>Lecture de tous tes emails... ça peut prendre quelques secondes !</span></div>`;
-
-  try {
-    // Récupère les emails via la fonction Vercel
-    const res = await fetch("/api/gmail", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ accessToken: token, maxEmails: 200 })
-    });
-    const data = await res.json();
-
-    if (!data.emails || data.emails.length === 0) {
-      body.textContent = "Aucun email trouvé.";
-      return;
-    }
-
-    // Formate les emails pour l'IA
-    const emailsText = data.emails.map((e, i) =>
-      `Email ${i+1}:\nDe: ${e.from}\nObjet: ${e.subject}\nDate: ${e.date}\nAperçu: ${e.snippet}`
-    ).join("\n\n---\n\n");
-
-    const filtreText = `
-${typeInclure ? `Types d'emails à INCLURE/prioriser : ${typeInclure}` : ""}
-${typeExclure ? `Types d'emails à IGNORER/exclure : ${typeExclure}` : ""}`.trim();
-
-    const r = await callGroq(`Tu es un assistant expert en gestion d'emails. Analyse ces ${data.emails.length} emails Gmail (sur ${data.total || data.emails.length} au total) et structure ta réponse EXACTEMENT ainsi :
-
-🔴 URGENT — À traiter aujourd'hui
-• [Email] — De : [expéditeur] — Objet : [objet] — Pourquoi urgent : [raison]
-
-🟡 IMPORTANT — À traiter cette semaine  
-• [Email] — De : [expéditeur] — Objet : [objet]
-
-🟢 INFO — Pas d'action requise
-• [Email] — De : [expéditeur] — Objet : [objet]
-
-🗑️ IGNORÉ (selon tes préférences)
-• [Email ignoré selon les critères]
-
-📌 RÉSUMÉ
-[résumé en 2-3 phrases des points les plus importants]
-
-${filtreText}
-
-Emails :
-${emailsText}`);
-
-    body.textContent = r;
-    await saveAnalysis("email", `Gmail — ${new Date().toLocaleDateString("fr-FR")}`, `${data.emails.length} emails analysés`, r);
-  } catch(e) {
-    if (e.message.includes("401") || e.message.includes("403")) {
-      gmailAccessToken = null;
-      localStorage.removeItem("gmail_token");
-      document.getElementById("gmail-connect-btn").style.display = "block";
-      document.getElementById("gmail-connected").style.display = "none";
-      body.innerHTML = `<span style="color:var(--accent2)">Session expirée. Reconnecte ton Gmail.</span>`;
-    } else {
-      body.innerHTML = `<span style="color:var(--accent2)">Erreur : ${e.message}</span>`;
-    }
-  }
-};
-window.switchEmailMode = function(mode) {
-  document.getElementById("email-mode-manuel").style.display = mode === "manuel" ? "block" : "none";
-  document.getElementById("email-mode-gmail").style.display = mode === "gmail" ? "block" : "none";
-  document.getElementById("mode-btn-email-manuel").classList.toggle("active", mode === "manuel");
-  document.getElementById("mode-btn-email-gmail").classList.toggle("active", mode === "gmail");
-  if (mode === "gmail") {
-    const token = localStorage.getItem("gmail_token");
-    if (token) {
-      gmailAccessToken = token;
-      document.getElementById("gmail-connect-btn").style.display = "none";
-      document.getElementById("gmail-connected").style.display = "flex";
-    }
-  }
-};
-
-window.toggleTheme = function() {
-  const isDark = document.body.classList.toggle("light-mode");
-  localStorage.setItem("theme", isDark ? "light" : "dark");
-  document.getElementById("theme-icon").textContent = isDark ? "☀️" : "🌙";
-};
-
-function initTheme() {
-  const saved = localStorage.getItem("theme");
-  if (saved === "light") {
-    document.body.classList.add("light-mode");
-    const icon = document.getElementById("theme-icon");
-    if (icon) icon.textContent = "☀️";
-  }
-}
-
-// ============================================================
-//  🔔 NOTIFICATIONS TÂCHES URGENTES
-// ============================================================
-async function requestNotifPermission() {
-  if (!("Notification" in window)) return;
-  if (Notification.permission === "default") {
-    await Notification.requestPermission();
-  }
-}
-
-function sendNotif(title, body) {
-  if (Notification.permission === "granted") {
-    new Notification(title, {
-      body,
-      icon: "https://workmate-gamma.vercel.app/favicon.ico"
-    });
-  }
-}
-
-// Détecte les tâches urgentes après FocusBot et notifie
-function checkUrgentTasks(result) {
-  if (!result) return;
-  const lines = result.split("\n");
-  const urgentTasks = [];
-  let inUrgent = false;
-  for (const line of lines) {
-    if (line.includes("PRIORITÉ ABSOLUE")) { inUrgent = true; continue; }
-    if (line.includes("IMPORTANT") || line.includes("PEUT ATTENDRE") || line.includes("CONSEIL")) { inUrgent = false; }
-    if (inUrgent && line.trim().startsWith("•")) {
-      urgentTasks.push(line.trim().replace("•", "").trim());
-    }
-  }
-  if (urgentTasks.length > 0) {
-    sendNotif("🎯 WorkMate — Tâche urgente !", urgentTasks[0].slice(0, 80));
-  }
-}
-
-// ============================================================
-//  📱 MENU MOBILE
-// ============================================================
-window.toggleMobileMenu = function() {
-  document.querySelector(".sidebar").classList.toggle("mobile-open");
-  document.getElementById("mobile-overlay").classList.toggle("active");
-};
-
-window.closeMobileMenu = function() {
-  document.querySelector(".sidebar").classList.remove("mobile-open");
-  document.getElementById("mobile-overlay").classList.remove("active");
-};
-
-// ============================================================
-//  INIT
-// ============================================================
+// INIT
 initTheme();
 requestNotifPermission();
 showPage("landing");
