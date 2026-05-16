@@ -42,8 +42,8 @@ const firebaseConfig = {
   appId: "1:106648534705:web:79c1af55ebf3dbe7972c90"
 };
 
-// 🔧 REMPLACE PAR TA CLÉ OPENROUTER (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)
-const OPENROUTER_API_KEY = "REMPLACE_PAR_TA_CLE_OPENROUTER";
+// 🔧 REMPLACE PAR TA CLÉ OPENROUTER (sk-or-...)
+const OPENROUTER_API_KEY = "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";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
