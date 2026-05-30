@@ -42,8 +42,7 @@ const firebaseConfig = {
   appId: "1:106648534705:web:79c1af55ebf3dbe7972c90"
 };
 
-// 🔧 REMPLACE PAR TA CLÉ OPENROUTER (sk-or-...)
-const OPENROUTER_API_KEY = "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";
+// La clé API est sécurisée dans les variables d'environnement Vercel
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -211,20 +210,13 @@ async function saveAnalysis(type, title, summary, content) {
 }
 
 // ============================================================
-//  OPENROUTER API (100% gratuit)
+//  IA — Via proxy Vercel sécurisé
 // ============================================================
 async function callGroq(prompt) {
-  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+  const res = await fetch("/api/ai", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-      "HTTP-Referer": "https://workmate-gamma.vercel.app",
-      "X-Title": "WorkMate"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "mistralai/mistral-7b-instruct:free",
-      max_tokens: 1000,
       messages: [
         { role: "system", content: "Tu es un assistant de productivité expert. Tu réponds toujours en français." },
         { role: "user", content: prompt }
@@ -232,7 +224,7 @@ async function callGroq(prompt) {
     })
   });
   const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
+  if (data.error) throw new Error(data.error);
   return data.choices[0].message.content;
 }
 
