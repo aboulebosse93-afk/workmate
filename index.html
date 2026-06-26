@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WorkMate — Assistant de travail, emails, réunions et documents</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#202020" />
+</head>
+<body>
+  <div id="page-landing" class="page active landing-page">
+    <header class="landing-header">
+      <div class="brand">
+        <div class="brand-logo">W</div>
+        <span>WorkMate</span>
+      </div>
+
+      <nav class="landing-nav">
+        <a href="#features">Fonctions</a>
+        <a href="#preview">Aperçu</a>
+        <button class="btn btn-ghost" onclick="showAuth('login')">Connexion</button>
+        <button class="btn btn-primary" onclick="showAuth('signup')">Commencer</button>
+      </nav>
+    </header>
+
+    <main class="hero">
+      <section class="hero-text">
+        <div class="eyebrow">Espace de travail assisté</div>
+        <h1>Transforme tes emails, réunions et documents en actions claires.</h1>
+        <p>
+          Un espace de travail moderne pour discuter, résumer, rédiger, importer des documents,
+          analyser Gmail, préparer des réunions et garder une trace claire de tes décisions.
+        </p>
+
+        <div class="hero-actions">
+          <button class="btn btn-primary btn-large" onclick="showAuth('signup')">Créer mon espace de travail</button>
+          <button class="btn btn-soft btn-large" onclick="showAuth('login')">Ouvrir mon compte</button>
+        </div>
+      </section>
+
+      <section id="preview" class="workspace-preview">
+        <div class="preview-window">
+          <div class="preview-top">
+            <span></span><span></span><span></span>
+            <strong>WorkMate</strong>
+          </div>
+          <div class="preview-body">
+            <aside>
+              <div></div><div></div><div></div><div></div>
+            </aside>
+            <main>
+              <div class="preview-title"></div>
+              <div class="preview-card wide"></div>
+              <div class="preview-grid">
+                <div></div><div></div><div></div>
+              </div>
+              <div class="preview-card"></div>
+            </main>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <section id="features" class="features">
+      <article>
+        <span>01</span>
+        <h3>Assistant central</h3>
+        <p>Discute, rédige, explique, code et transforme tes idées en réponses structurées.</p>
+      </article>
+      <article>
+        <span>02</span>
+        <h3>Gmail intelligent</h3>
+        <p>Lis, classe et priorise les messages importants, non lus, urgents ou avec pièces jointes.</p>
+      </article>
+      <article>
+        <span>03</span>
+        <h3>Documents</h3>
+        <p>Importe un fichier texte, des notes ou un CSV, puis demande un résumé ou un plan d’action.</p>
+      </article>
+      <article>
+        <span>04</span>
+        <h3>Confidentialité</h3>
+        <p>Gmail est utilisé en lecture seule, avec des réglages clairs pour gérer tes données locales.</p>
+      </article>
+    </section>
+  </div>
+
+  <div id="page-auth" class="page auth-page">
+    <div class="auth-card">
+      <button class="close-auth" onclick="showPage('landing')">×</button>
+
+      <div class="brand auth-brand">
+        <div class="brand-logo">W</div>
+        <span>WorkMate</span>
+      </div>
+
+      <div class="auth-tabs">
+        <button onclick="toggleAuth('login')">Connexion</button>
+        <button onclick="toggleAuth('signup')">Inscription</button>
+      </div>
+
+      <section id="auth-login">
+        <h2>Connexion</h2>
+        <p class="muted">Accède à ton espace de travail.</p>
+        <input id="login-email" type="email" placeholder="Adresse email" autocomplete="email" />
+        <input id="login-pass" type="password" placeholder="Mot de passe" autocomplete="current-password" />
+        <button id="btn-login" class="btn btn-primary full" onclick="doLogin()">Se connecter</button>
+        <button class="btn btn-soft full" onclick="doGoogleLogin()">Continuer avec Google</button>
+        <button class="link-btn" onclick="doResetPassword()">Mot de passe oublié ?</button>
+        <div id="auth-error" class="error"></div>
+      </section>
+
+      <section id="auth-signup" style="display:none">
+        <h2>Créer un compte</h2>
+        <p class="muted">Configure ton espace en quelques secondes.</p>
+        <div class="grid-2">
+          <input id="signup-firstname" placeholder="Prénom" />
+          <input id="signup-lastname" placeholder="Nom" />
+        </div>
+        <input id="signup-email" type="email" placeholder="Adresse email" autocomplete="email" />
+        <input id="signup-pass" type="password" placeholder="Mot de passe — min. 8 caractères" autocomplete="new-password" />
+        <button id="btn-signup" class="btn btn-primary full" onclick="doSignup()">Créer le compte</button>
+        <button class="btn btn-soft full" onclick="doGoogleLogin()">S'inscrire avec Google</button>
+        <div id="signup-error" class="error"></div>
+        <button id="signup-login-suggestion" class="link-btn" style="display:none" onclick="goToLoginFromSignup()">Cet email existe déjà ? Se connecter</button>
+      </section>
+    </div>
+  </div>
+
+  <div id="page-app" class="page app-page">
+    <aside class="sidebar chatgpt-dark-sidebar">
+      <div class="sidebar-top">
+        <div class="dark-sidebar-header">
+          <strong>WorkMate</strong>
+          <button class="sidebar-collapse-btn" type="button" aria-label="Menu">☰</button>
+        </div>
+
+        <button class="dark-nav-action" onclick="newConversation()">
+          <span>✐</span>
+          <strong>Nouvelle discussion</strong>
+        </button>
+
+        <button class="dark-nav-action" onclick="focusChatSearch()">
+          <span>⌕</span>
+          <strong>Rechercher</strong>
+        </button>
+
+        <button class="dark-nav-action" onclick="switchView('documents')">
+          <span>▤</span>
+          <strong>Bibliothèque</strong>
+        </button>
+
+        <button class="dark-nav-action" onclick="switchView('projects')">
+          <span>▣</span>
+          <strong>Projets</strong>
+        </button>
+
+        <button class="dark-nav-action" onclick="switchView('templates')">
+          <span>▦</span>
+          <strong>Modèles</strong>
+        </button>
+
+        <button class="dark-nav-action" onclick="switchView('apps')">
+          <span>⌘</span>
+          <strong>Applications</strong>
+        </button>
+
+        <button class="dark-nav-action" onclick="switchView('history')">
+          <span>◷</span>
+          <strong>Historique</strong>
+        </button>
+
+        <div class="sidebar-search" id="sidebar-search-wrap" style="display:none">
+          <input id="chat-search-input" placeholder="Rechercher dans les chats..." oninput="searchConversations()" />
+        </div>
+
+        <div class="dark-recents-block">
+          <div class="dark-recents-title">Récents</div>
+          <div id="conversations-list" class="sidebar-conversations dark-recents"></div>
+        </div>
+      </div>
+
+      <div class="sidebar-footer dark-sidebar-footer">
+        <button class="dark-account-row" onclick="switchView('profile')">
+          <div id="user-avatar-initials" class="avatar dark-user-avatar">W</div>
+          <div>
+            <strong id="user-display-name">Camarade de travail</strong>
+            <small id="usage-badge">Accès illimité</small>
+          </div>
+        </button>
+
+        <button class="dark-logout-btn" onclick="doLogout()">
+          <span>↩</span>
+          <strong>Déconnexion</strong>
+        </button>
+      </div>
+    </aside>
+
+    <div id="mobile-overlay" onclick="closeMobileMenu()"></div>
+
+    <main class="main">
+      <header class="topbar dark-chat-topbar">
+        <button class="mobile-menu" onclick="toggleMobileMenu()">☰</button>
+        <button class="assistant-selector" onclick="goAssistant()">
+          <span id="topbar-title">Assistant Central</span>
+          <small>⌄</small>
+        </button>
+        <div class="topbar-actions">
+          <button class="theme-mode-btn" onclick="toggleTheme()" title="Changer le thème">
+            <span id="theme-icon">🌙</span>
+          </button>
+          <button class="share-btn" onclick="exportCurrentConversation()">⇧ Partager</button>
+        </div>
+      </header>
+
+      <section id="view-assistant" class="app-view active">
+        <div class="tool-head assistant-head">
+          <div class="dark-assistant-title">
+            <h2>Comment puis-je t'aider ?</h2>
+            <p>WorkMate peut expliquer, rédiger, résumer, coder, structurer ou conseiller.</p>
+          </div>
+
+          <div class="assistant-quick-actions">
+            <button onclick="setAssistantPrompt('Résume ce contenu et donne-moi les actions importantes : ')">Résumer</button>
+            <button onclick="setAssistantPrompt('Rédige un email professionnel pour cette situation : ')">Rédiger</button>
+            <button onclick="openWorkspaceTool('reunion')">Réunion</button>
+            <button onclick="openWorkspaceTool('email')">Gmail</button>
+            <button onclick="openWorkspaceTool('documents')">Documents</button>
+            <button onclick="openWorkspaceTool('actions')">Actes</button>
+            <button onclick="openWorkspaceTool('calendar')">Calendrier</button>
+            <button onclick="openAgentMode()">Agent</button>
+            <button onclick="openWorkspaceTool('global-search')">Recherche</button>
+            <button onclick="setAssistantPrompt('Explique simplement ce sujet : ')">Comprendre</button>
+          </div>
+        </div>
+<div id="active-project-banner" class="active-project-banner" style="display:none"></div>
+<div class="assistant-layout">
+          <div id="assistant-messages" class="assistant-messages">
+            <div class="assistant-empty">
+              <h3>Démarre une demande</h3>
+              <p>Écris directement dans la zone de message, ou utilise les actions rapides à côté du titre Assistant.</p>
+            </div>
+          </div>
+
+          <div class="assistant-composer-wrap">
+            <div id="assistant-attachments" class="assistant-attachments" style="display:none"></div>
+
+            <div class="assistant-composer">
+              <input id="assistant-file-input" type="file" multiple accept="image/*,.pdf,.doc,.docx,.txt,.md,.csv,.json,.html,.log,.js,.css,.py,.php,.java,.xml,.yml,.yaml" hidden onchange="handleChatAttachments(event)" />
+              <button id="btn-chat-plus" class="btn btn-soft assistant-plus-btn" type="button" onclick="openChatAttachmentPicker()" aria-label="Ajouter une image ou un fichier">+</button>
+              <textarea id="assistant-input" placeholder="Écris ton message..."></textarea>
+              <button id="btn-assistant" class="btn btn-primary" onclick="sendAssistantMessage()">Envoyer</button>
+            </div>
+            <p class="assistant-attach-help">WorkMate peut faire des erreurs. Pensez à vérifier les informations importantes.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-reunion" class="app-view">
+        <button class="btn btn-ghost back-to-assistant" onclick="goAssistant()">← Retour à l’assistant</button>
+        <div class="tool-head">
+          <div>
+            <p class="eyebrow">Réunions</p>
+            <h2>Transformer une réunion en plan d’action</h2>
+            <p>Colle tes notes ou utilise le micro pour extraire décisions, tâches et points de suivi.</p>
+          </div>
+        </div>
+
+        <div class="mode-switch">
+          <button id="mode-btn-texte" class="active" onclick="switchReunionMode('texte')">Texte</button>
+          <button id="mode-btn-micro" onclick="switchReunionMode('micro')">Micro</button>
+        </div>
+
+        <div id="reunion-mode-texte" class="panel">
+          <input id="reunion-agenda" placeholder="Ordre du jour — optionnel" />
+          <textarea id="reunion-input" placeholder="Colle ici tes notes de réunion..."></textarea>
+          <div class="row-between"><small><span id="reunion-chars">0</span> caractères</small></div>
+          <div class="module-actions">
+            <button id="btn-reunion" class="btn btn-primary" onclick="analyzeReunion()">Analyser la réunion</button>
+            <button class="btn btn-soft" onclick="clearReunionFields()">Nouvelle réunion</button>
+          </div>
+        </div>
+
+        <div id="reunion-mode-micro" class="panel" style="display:none">
+          <div class="micro-box">
+            <p id="micro-status-text">Micro prêt</p>
+            <div id="mic-waves" class="waves" style="display:none"><span></span><span></span><span></span></div>
+            <button id="btn-record" class="btn btn-primary" onclick="toggleRecording()">Démarrer l’écoute</button>
+          </div>
+          <textarea id="reunion-transcript" placeholder="La transcription apparaîtra ici..."></textarea>
+          <div class="module-actions">
+            <button class="btn btn-soft" onclick="analyzeTranscript()">Analyser la transcription</button>
+            <button class="btn btn-soft" onclick="clearTranscript()">Effacer la transcription</button>
+          </div>
+        </div>
+
+        <div id="reunion-result" class="result-card">
+          <div class="result-head">
+            <h3>Résultat</h3>
+            <div class="result-actions">
+              <button class="btn btn-soft" onclick="copyReunionResult()">Copier</button>
+              <button class="btn btn-soft" onclick="exportReunionResult()">Exporter .txt</button>
+            </div>
+          </div>
+          <div id="reunion-body" class="markdown-body"></div>
+        </div>
+      </section>
+
+      <section id="view-email" class="app-view">
+        <button class="btn btn-ghost back-to-assistant" onclick="goAssistant()">← Retour à l’assistant</button>
+        <div class="tool-head">
+          <div>
+            <p class="eyebrow">Emails</p>
+            <h2>Rédiger, lire et prioriser</h2>
+            <p>Crée des emails professionnels ou connecte Gmail pour classer les messages importants.</p>
+          </div>
+        </div>
+
+        <div class="mode-switch">
+          <button id="mode-btn-email-manuel" class="active" onclick="switchEmailMode('manuel')">Rédaction</button>
+          <button id="mode-btn-email-gmail" onclick="switchEmailMode('gmail')">Gmail</button>
+        </div>
+
+        <div id="email-mode-manuel" class="panel">
+          <textarea id="email-input" placeholder="Explique la situation, le destinataire, le ton souhaité..."></textarea>
+          <div class="row-between"><small><span id="email-chars">0</span> caractères</small></div>
+          <button id="btn-email" class="btn btn-primary" onclick="generateEmail()">Générer 3 versions</button>
+          <div id="email-result" class="result-card nested">
+            <h3>Versions proposées</h3>
+            <div id="email-variants"></div>
+          </div>
+        </div>
+
+        <div id="email-mode-gmail" class="panel" style="display:none">
+          <div id="gmail-connect-ui">
+            <h3>Connexion Gmail</h3>
+            <p class="muted">
+              Connecte ton compte Google avec une autorisation de lecture uniquement.
+              WorkMate lit les messages par lots pour les trier et les prioriser. Tu peux lire 50, 100, 1 000, 2 000 emails ou tenter toute la boîte Gmail accessible.
+            </p>
+            <button id="btn-connect-gmail" class="btn btn-primary" onclick="connectGmailOAuth()">Connecter Gmail</button>
+            <details style="margin-top:14px">
+              <summary class="muted">Option avancée : token temporaire</summary>
+              <input id="gmail-token-input" placeholder="Access token Gmail temporaire" style="margin-top:10px" />
+              <button class="btn btn-soft" onclick="saveGmailToken()">Enregistrer le token</button>
+            </details>
+          </div>
+
+          <div id="gmail-connected" class="gmail-ok" style="display:none">
+            <span>Gmail connecté</span>
+            <button class="btn btn-soft" onclick="resetGmailToken()">Déconnecter</button>
+          </div>
+
+          <div class="grid-2">
+            <input id="gmail-inclure" placeholder="Priorité — ex : clients, factures, école" />
+            <input id="gmail-exclure" placeholder="À ignorer — ex : pubs, réseaux sociaux, newsletters" />
+          </div>
+
+          <div class="grid-2" style="margin-top:12px">
+            <select id="gmail-query" class="input-like">
+              <option value="in:inbox newer_than:7d">Boîte de réception — 7 derniers jours</option>
+              <option value="in:inbox newer_than:30d" selected>Boîte de réception — 30 derniers jours</option>
+              <option value="in:inbox newer_than:90d">Boîte de réception — 90 derniers jours</option>
+              <option value="in:inbox">Boîte de réception — tout</option>
+              <option value="newer_than:30d">Tous les dossiers — 30 derniers jours</option>
+              <option value="">Tout le compte Gmail accessible</option>
+            </select>
+            <select id="gmail-max" class="input-like">
+              <option value="50">Lire 50 emails</option>
+              <option value="100">Lire 100 emails</option>
+              <option value="200" selected>Lire 200 emails</option>
+              <option value="500">Lire 500 emails</option>
+              <option value="1000">Lire 1 000 emails</option>
+              <option value="2000">Lire 2 000 emails</option>
+              <option value="all">Lire tout Gmail accessible</option>
+            </select>
+          </div>
+
+          <div class="grid-2" style="margin-top:12px">
+            <select id="gmail-filter" class="input-like">
+              <option value="all">Tous les emails</option>
+              <option value="unread">Non lus uniquement</option>
+              <option value="important">Importants uniquement</option>
+              <option value="attachments">Avec pièces jointes</option>
+            </select>
+            <select id="gmail-output" class="input-like">
+              <option value="summary">Tri + résumé professionnel</option>
+              <option value="reply">Tri + réponses proposées</option>
+              <option value="actions">Actions à faire uniquement</option>
+            </select>
+          </div>
+
+          <div id="gmail-preview" class="gmail-preview" style="display:none"></div>
+
+          <p class="muted" style="margin-top:12px">
+            Pour un très gros compte Gmail, la lecture complète peut prendre du temps. L'application lit par lots, puis l'IA analyse les emails les plus importants.
+          </p>
+
+          <button id="btn-gmail" class="btn btn-primary" onclick="loadGmailEmails()">Lire et trier Gmail</button>
+          <button class="btn btn-soft" onclick="draftGmailReply()">Créer un brouillon Gmail</button>
+          <button class="btn btn-ghost" onclick="markImportantGmailRead()">Marquer les importants comme lus</button>
+          <button class="btn btn-ghost" onclick="archiveLowPriorityGmail()">Archiver basse priorité</button>
+
+          <div id="gmail-result" class="result-card nested">
+            <h3>Analyse Gmail</h3>
+            <pre id="gmail-body"></pre>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-documents" class="app-view">
+        <button class="btn btn-ghost back-to-assistant" onclick="goAssistant()">← Retour à l’assistant</button>
+        <div class="tool-head">
+          <div>
+            <p class="eyebrow">Documents</p>
+            <h2>Importer, résumer et sauvegarder</h2>
+            <p>Ajoute un fichier texte, CSV, Markdown ou colle un contenu pour demander une synthèse, un résumé ou un plan d’action.</p>
+          </div>
+        </div>
+
+        <div class="panel">
+          <label class="field-label">
+            <span>Importer un fichier</span>
+            <input id="document-file" type="file" accept=".txt,.md,.csv,.json,.html,.log,.js,.css,.py,.php,.java,.xml,.yml,.yaml" onchange="handleDocumentFile(event)" />
+          </label>
+          <textarea id="document-input" placeholder="Colle ici un texte, un document, un compte rendu ou des notes..."></textarea>
+          <div class="grid-2">
+            <input id="document-title" placeholder="Titre du document" />
+            <select id="document-action" class="input-like">
+              <option value="summary">Résumé clair</option>
+              <option value="actions">Actions importantes</option>
+              <option value="email">Transformer en email</option>
+              <option value="report">Compte rendu structuré</option>
+            </select>
+          </div>
+          <button id="btn-document" class="btn btn-primary" onclick="analyzeDocument()">Analyser le document</button>
+          <button class="btn btn-soft" onclick="saveDocumentOnly()">Sauvegarder sans analyser</button>
+        </div>
+
+        <div id="document-result" class="result-card">
+          <div class="result-head">
+            <h3>Résultat document</h3>
+            <div class="result-actions">
+              <button class="btn btn-soft" onclick="copyDocumentResult()">Copier</button>
+              <button class="btn btn-soft" onclick="exportDocumentResult()">Exporter .txt</button>
+            </div>
+          </div>
+          <div id="document-body" class="markdown-body"></div>
+        </div>
+
+        <div class="panel">
+          <div class="section-title">
+            <h3>Mes documents</h3>
+            <span>Stockés localement dans le navigateur</span>
+          </div>
+          <div id="documents-list" class="documents-list"></div>
+        </div>
+      </section>
+
+      <section id="view-actions" class="app-view">
+        <button class="btn btn-ghost back-to-assistant" onclick="goAssistant()">← Retour à l’assistant</button>
+        <div class="tool-head">
+          <div>
+            <p class="eyebrow">Actions</p>
+            <h2>Actions à faire</h2>
+            <p>Retrouve les actions détectées dans tes réunions, Gmail, documents et discussions.</p>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="task-add">
+            <input id="manual-action-input" placeholder="Ajouter une action manuellement..." onkeydown="if(event.key==='Enter') addManualAction()" />
+            <button class="btn btn-primary" onclick="addManualAction()">Ajouter</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div id="actions-list" class="action-list"></div>
+        </div>
+      </section>
+
+      <section id="view-privacy" class="app-view">
+        <button class="btn btn-ghost back-to-assistant" onclick="switchView('profile')">← Retour au profil</button>
+        <div class="tool-head">
+          <div>
+            <p class="eyebrow">Sécurité</p>
+            <h2>Confidentialité et données</h2>
+            <p>Contrôle ce qui est stocké localement et rappelle les règles de sécurité Gmail.</p>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Gmail</h3>
+          <p class="muted">WorkMate utilise le scope Gmail en lecture seule. L'application ne demande pas ton mot de passe Gmail et ne supprime pas tes emails.</p>
+          <button class="btn btn-soft" onclick="resetGmailToken()">Déconnecter Gmail</button>
+        </div>
+
+        <div class="panel">
+          <h3>Données locales</h3>
+          <p class="muted">Les conversations, documents et paramètres d'interface sont stockés dans ce navigateur.</p>
+          <button class="btn btn-soft" onclick="exportLocalData()">Exporter mes données locales</button>
+          <button class="btn btn-ghost" onclick="clearLocalWorkspaceData()">Effacer les données locales</button>
+        </div>
+
+        <div class="panel">
+          <h3>Pages légales à prévoir</h3>
+          <p class="muted">Pour une validation Google complète, ajoute une politique de confidentialité et des conditions d'utilisation sur ton site.</p>
+          <button class="btn btn-soft" onclick="generateLegalPages()">Générer un texte de politique de confidentialité</button>
+          <button class="btn btn-soft" onclick="downloadPrivacyTemplate()">Télécharger politique + CGU</button>
+        </div>
+      </section>
+
+
+      <section id="view-projects" class="app-view">
+        <button class="btn btn-ghost back-to-assistant" onclick="goAssistant()">← Retour à l’assistant</button>
+        <div class="tool-head">
+          <div>
+            <p class="eyebrow">Projets</p>
+            <h2>Organiser le travail par projet</h2>
+            <p>Crée des espaces pour regrouper tes discussions, documents, actions et résumés.</p>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="task-add">
+            <input id="project-name-input" placeholder="Nom du projet — ex : Association, École, Clients..." onkeydown="if(event.key==='Enter') addProject()" />
+            <button class="btn btn-primary" onclick="addProject()">Créer</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="section-title">
+            <h3>Mes projets</h3>
+            <span>Organisation locale</span>
+          </div>
+          <div id="projects-list" class="project-list"></div>
+        </div>
+      </section>
+
+      <section id="view-memory" class="app-view">
+        <button class="btn btn-ghost back-to-assistant" onclick="switchView('profile')">← Retour au profil</button>
+        <div class="tool-head">
+          <div>
+            <p class="eyebrow">Mémoire</p>
+            <h2>Mémoire longue durée</h2>
+            <p>Ajoute les préférences que WorkMate doit utiliser dans ses réponses.</p>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="grid-2">
+            <input id="memory-company" placeholder="Entreprise / association" />
+            <input id="memory-signature" placeholder="Signature email" />
+          </div>
+          <textarea id="memory-notes" placeholder="Style d’écriture préféré, contacts importants, projets en cours, objectifs, règles personnelles..."></textarea>
+          <button class="btn btn-primary" onclick="saveMemory()">Sauvegarder la mémoire</button>
+          <button class="btn btn-ghost" onclick="clearMemory()">Effacer la mémoire</button>
+          <div id="memory-msg" class="message"></div>
+        </div>
+      </section>
+
+      <section id="view-calendar" class="app-view">
+        <button class="btn btn-ghost back-to-assistant" onclick="goAssistant()">← Retour à l’assistant</button>
+        <div class="tool-head">
+          <div>
+            <p class="eyebrow">Calendrier</p>
+            <h2>Google Calendar</h2>
+            <p>Lis tes rendez-vous et crée un événement si Google Calendar est autorisé.</p>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="grid-2">
+            <button class="btn btn-primary" onclick="connectGoogleWorkspace()">Connecter Google Workspace</button>
+            <button class="btn btn-soft" onclick="loadCalendarEvents()">Lire mes rendez-vous</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Créer un événement</h3>
+          <input id="cal-title" placeholder="Titre de l’événement" />
+          <div class="grid-2">
+            <input id="cal-start" type="datetime-local" />
+            <input id="cal-end" type="datetime-local" />
+          </div>
+          <input id="cal-attendees" placeholder="Invités — emails séparés par des virgules" />
+          <button class="btn btn-primary" onclick="createCalendarEvent()">Créer l’événement</button>
+        </div>
+
+        <div id="calendar-result" class="result-card">
+          <h3>Calendrier</h3>
+          <pre id="calendar-body"></pre>
+        </div>
+      </section>
+
+      <section id="view-apps" class="app-view">
+        <button class="btn btn-ghost back-to-assistant" onclick="goAssistant()">← Retour à l’assistant</button>
+        <div class="tool-head">
+          <div>
+            <p class="eyebrow">Applications</p>
+            <h2>Mini-outils WorkMate</h2>
+            <p>Choisis un outil prêt à l’emploi.</p>
+          </div>
+        </div>
+
+        <div class="apps-grid">
+          <button onclick="useToolPrompt('Corrige et améliore cet email professionnel : ')"><strong>Correcteur d’email</strong><span>Améliorer un message</span></button>
+          <button onclick="useToolPrompt('Résume ce document en points essentiels : ')"><strong>Résumé document</strong><span>Synthèse rapide</span></button>
+          <button onclick="useToolPrompt('Transforme ces notes en compte rendu professionnel : ')"><strong>Compte rendu</strong><span>Réunion structurée</span></button>
+          <button onclick="openWorkspaceTool('email')"><strong>Analyseur Gmail</strong><span>Tri des courriels</span></button>
+          <button onclick="useToolPrompt('Crée un planning clair pour ces tâches : ')"><strong>Planning</strong><span>Organisation</span></button>
+          <button onclick="useToolPrompt('Traduis en anglais professionnel : ')"><strong>Traducteur pro</strong><span>FR/EN</span></button>
+          <button onclick="useToolPrompt('Aide-moi à corriger et expliquer ce code : ')"><strong>Assistant code</strong><span>Debug et explication</span></button>
+          <button onclick="useToolPrompt('Rédige une lettre de motivation professionnelle pour : ')"><strong>CV / Lettre</strong><span>Candidature</span></button>
+        </div>
+      </section>
+
+      <section id="view-templates" class="app-view">
+        <button class="btn btn-ghost back-to-assistant" onclick="goAssistant()">← Retour à l’assistant</button>
+        <div class="tool-head">
+          <div>
+            <p class="eyebrow">Modèles</p>
+            <h2>Modèles professionnels</h2>
+            <p>Clique sur un modèle pour remplir automatiquement l’assistant.</p>
+          </div>
+        </div>
+
+        <div id="templates-list" class="templates-grid"></div>
+      </section>
+
+      <section id="view-admin" class="app-view">
+        <button class="btn btn-ghost back-to-assistant" onclick="switchView('profile')">← Retour au profil</button>
+        <div class="tool-head">
+          <div>
+            <p class="eyebrow">Admin</p>
+            <h2>Espace admin local</h2>
+            <p>Vue locale des statistiques de ton espace WorkMate.</p>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <article><span id="admin-conv-count">0</span><small>Discussions</small></article>
+          <article><span id="admin-doc-count">0</span><small>Documents</small></article>
+          <article><span id="admin-action-count">0</span><small>Actions</small></article>
+          <article><span id="admin-project-count">0</span><small>Projets</small></article>
+        </div>
+
+        <div class="panel">
+          <button class="btn btn-soft" onclick="exportLocalData()">Exporter les données locales</button>
+          <button class="btn btn-danger" onclick="clearLocalWorkspaceData()">Effacer les données locales</button>
+        </div>
+      </section>
+
+
+      <section id="view-teams" class="app-view">
+        <button class="btn btn-ghost back-to-assistant" onclick="goAssistant()">← Retour</button>
+        <div class="tool-head"><div><p class="eyebrow">Équipes</p><h2>Comptes entreprise / équipes</h2><p>Crée une équipe, invite des membres et attribue des rôles locaux.</p></div></div>
+        <div class="panel">
+          <div class="grid-2">
+            <input id="team-name" placeholder="Nom de l’équipe — ex : MAKE TECHNOLOGY" />
+            <button class="btn btn-primary" onclick="saveTeam()">Créer / renommer l’équipe</button>
+          </div>
+          <hr />
+          <div class="grid-2">
+            <input id="team-email" placeholder="Email du membre" />
+            <select id="team-role" class="input-like">
+              <option value="admin">Admin</option>
+              <option value="member">Membre</option>
+              <option value="reader">Lecteur</option>
+            </select>
+          </div>
+          <button class="btn btn-soft" onclick="addTeamMember()">Ajouter le membre</button>
+        </div>
+        <div class="panel"><div id="team-view" class="team-view"></div></div>
+      </section>
+
+      <section id="view-knowledge" class="app-view">
+        <button class="btn btn-ghost back-to-assistant" onclick="goAssistant()">← Retour</button>
+        <div class="tool-head"><div><p class="eyebrow">Connaissances</p><h2>Base de connaissances intelligente</h2><p>Ajoute tes documents et pose des questions dessus.</p></div></div>
+        <div class="panel">
+          <input id="kb-title" placeholder="Titre de la connaissance" />
+          <textarea id="kb-content" placeholder="Colle ici une note, un document, une procédure, un extrait..."></textarea>
+          <button class="btn btn-primary" onclick="addKnowledge()">Ajouter à la base</button>
+        </div>
+        <div class="panel">
+          <div class="task-add">
+            <input id="kb-question" placeholder="Pose une question à ta base..." onkeydown="if(event.key==='Enter')askKnowledge()" />
+            <button class="btn btn-primary" onclick="askKnowledge()">Demander</button>
+          </div>
+        </div>
+        <div id="knowledge-result" class="result-card"><h3>Réponse</h3><pre id="knowledge-body"></pre></div>
+        <div class="panel"><div id="knowledge-list" class="documents-list"></div></div>
+      </section>
+
+      <section id="view-agent" class="app-view">
+        <button class="btn btn-ghost back-to-assistant" onclick="goAssistant()">← Retour</button>
+        <div class="tool-head"><div><p class="eyebrow">Agent</p><h2>Mode Agent</h2><p>Mode Agent 100 % local : il crée un plan et ajoute des actions dans WorkMate même sans clé IA.</p></div></div>
+        <div class="panel">
+          <textarea id="agent-goal" placeholder="Objectif de l’agent — ex : organise mon travail aujourd’hui, crée les actions et donne-moi les prochaines étapes..."></textarea>
+          <button id="btn-agent" class="btn btn-primary" onclick="runAgent()">Lancer l’agent</button>
+          <button class="btn btn-soft" onclick="openAgentMode()">Remplir un exemple</button>
+          <button class="btn btn-soft" onclick="createAgentLocalActions()">Créer les actions sans IA</button>
+        </div>
+        <div id="agent-result" class="result-card"><h3>Plan Agent</h3><pre id="agent-body"></pre></div>
+      </section>
+
+      <section id="view-automations" class="app-view">
+        <button class="btn btn-ghost back-to-assistant" onclick="goAssistant()">← Retour</button>
+        <div class="tool-head"><div><p class="eyebrow">Automatisations</p><h2>Automatisations locales</h2><p>Crée des routines qui se déclenchent quand l’application est ouverte.</p></div></div>
+        <div class="panel">
+          <div class="grid-2">
+            <input id="auto-title" placeholder="Nom — ex : Résumé Gmail du matin" />
+            <select id="auto-type" class="input-like">
+              <option value="gmail">Résumer Gmail</option>
+              <option value="actions">Résumé des actions</option>
+              <option value="meeting">Préparer réunion</option>
+              <option value="custom">Prompt personnalisé</option>
+            </select>
+          </div>
+          <textarea id="auto-prompt" placeholder="Prompt personnalisé ou consigne..."></textarea>
+          <select id="auto-frequency" class="input-like">
+            <option value="daily">Tous les jours</option>
+            <option value="weekly">Chaque semaine</option>
+            <option value="manual">Manuel</option>
+          </select>
+          <button class="btn btn-primary" onclick="addAutomation()">Ajouter automatisation</button>
+        </div>
+        <div class="panel"><div id="automations-list" class="action-list"></div></div>
+      </section>
+
+      <section id="view-ocr" class="app-view">
+        <button class="btn btn-ghost back-to-assistant" onclick="goAssistant()">← Retour</button>
+        <div class="tool-head"><div><p class="eyebrow">OCR</p><h2>Lire le texte dans les images</h2><p>Importe une image et WorkMate tente d’extraire le texte avec OCR.</p></div></div>
+        <div class="panel">
+          <input id="ocr-file" type="file" accept="image/*" onchange="runOCR(event)" />
+        </div>
+        <div id="ocr-result" class="result-card"><h3>Texte extrait</h3><pre id="ocr-body"></pre></div>
+      </section>
+
+      <section id="view-integrations" class="app-view">
+        <button class="btn btn-ghost back-to-assistant" onclick="goAssistant()">← Retour</button>
+        <div class="tool-head"><div><p class="eyebrow">Intégrations</p><h2>Connexions externes</h2><p>Prépare les futures connexions Google Drive, Notion, Trello, Slack, GitHub, Outlook, OneDrive et Dropbox.</p></div></div>
+        <div id="integrations-grid" class="apps-grid"></div>
+      </section>
+
+      <section id="view-exports" class="app-view">
+        <button class="btn btn-ghost back-to-assistant" onclick="goAssistant()">← Retour</button>
+        <div class="tool-head"><div><p class="eyebrow">Exports</p><h2>Génération de documents propres</h2><p>Exporte tes contenus en Markdown, HTML, CSV ou document Word compatible.</p></div></div>
+        <div class="apps-grid">
+          <button onclick="exportCurrentConversation()"><strong>Conversation Markdown</strong><span>Exporter le chat actuel</span></button>
+          <button onclick="exportActionsCSV()"><strong>Actions CSV</strong><span>Tableur compatible Excel</span></button>
+          <button onclick="exportKnowledgeHTML()"><strong>Base HTML</strong><span>Document lisible dans un navigateur</span></button>
+          <button onclick="exportWordCompatible()"><strong>Word compatible</strong><span>Document .doc ouvrable avec Word</span></button>
+        </div>
+      </section>
+
+      <section id="view-global-search" class="app-view">
+        <button class="btn btn-ghost back-to-assistant" onclick="goAssistant()">← Retour</button>
+        <div class="tool-head"><div><p class="eyebrow">Recherche globale</p><h2>Chercher partout</h2><p>Recherche dans discussions, documents, actions, projets et connaissances.</p></div></div>
+        <div class="panel">
+          <input id="global-search-input" placeholder="Recherche globale..." oninput="runGlobalSearch()" />
+        </div>
+        <div class="panel"><div id="global-search-results" class="history-list"></div></div>
+      </section>
+
+      <section id="view-logs" class="app-view">
+        <button class="btn btn-ghost back-to-assistant" onclick="goAssistant()">← Retour</button>
+        <div class="tool-head"><div><p class="eyebrow">Logs</p><h2>Monitoring local</h2><p>Surveille les erreurs, actions et événements WorkMate.</p></div></div>
+        <div class="panel"><button class="btn btn-soft" onclick="clearLogs()">Effacer les logs</button></div>
+        <div class="panel"><pre id="logs-body"></pre></div>
+      </section>
+
+      <section id="view-security" class="app-view">
+        <button class="btn btn-ghost back-to-assistant" onclick="switchView('profile')">← Retour au profil</button>
+        <div class="tool-head"><div><p class="eyebrow">Sécurité</p><h2>Sécurité avancée</h2><p>Options RGPD, suppression de compte, déconnexion et chiffrement local à prévoir.</p></div></div>
+        <div class="panel">
+          <button class="btn btn-soft" onclick="exportLocalData()">Export RGPD local</button>
+          <button class="btn btn-soft" onclick="doLogout()">Déconnexion</button>
+          <button class="btn btn-danger" onclick="clearLocalWorkspaceData()">Supprimer données locales</button>
+        </div>
+      </section>
+
+      <section id="view-history" class="app-view">
+        <button class="btn btn-ghost back-to-assistant" onclick="goAssistant()">← Retour à l’assistant</button>
+        <div class="tool-head">
+          <div>
+            <p class="eyebrow">Historique</p>
+            <h2>Activités enregistrées</h2>
+          </div>
+        </div>
+
+        <div class="filters">
+          <button class="filter-btn active" onclick="filterHistory(this, 'all')">Tout</button>
+          <button class="filter-btn" onclick="filterHistory(this, 'assistant')">Assistant</button>
+          <button class="filter-btn" onclick="filterHistory(this, 'reunion')">Réunions</button>
+          <button class="filter-btn" onclick="filterHistory(this, 'email')">Emails</button>
+        </div>
+
+        <div id="history-list" class="history-list"></div>
+      </section>
+
+      <section id="view-profile" class="app-view">
+        <div class="tool-head">
+          <div>
+            <p class="eyebrow">Compte</p>
+            <h2>Profil et paramètres</h2>
+            <p>Modifie tes informations, l’apparence de l’espace, le comportement de l’assistant et les réglages Gmail.</p>
+          </div>
+        </div>
+
+        <div class="profile-grid">
+          <div class="panel profile-card">
+            <div id="profile-avatar" class="avatar big">W</div>
+            <h2 id="profile-name">Utilisateur</h2>
+            <p id="profile-email" class="muted"></p>
+            <p class="muted unlimited-note">Utilisation illimitée</p>
+          </div>
+
+          <div class="profile-settings-stack">
+            <div class="panel">
+              <div class="settings-section-title">
+                <div>
+                  <h3>Informations personnelles</h3>
+                  <p>Ces informations apparaissent dans ton espace WorkMate.</p>
+                </div>
+              </div>
+
+              <div class="grid-2">
+                <label class="field-label">
+                  <span>Prénom</span>
+                  <input id="profile-firstname" placeholder="Prénom" />
+                </label>
+                <label class="field-label">
+                  <span>Nom</span>
+                  <input id="profile-lastname" placeholder="Nom" />
+                </label>
+              </div>
+
+              <label class="field-label">
+                <span>Email du compte</span>
+                <input id="profile-email-input" disabled />
+              </label>
+
+              <button class="btn btn-primary" onclick="saveProfile()">Sauvegarder le profil</button>
+              <div id="profile-msg" class="message"></div>
+            </div>
+
+            <div class="panel">
+              <div class="settings-section-title">
+                <div>
+                  <h3>Paramètres de l’espace</h3>
+                  <p>Personnalise l’interface et les réponses de l’assistant.</p>
+                </div>
+              </div>
+
+              <label class="field-label">
+                <span>Nom de l’espace</span>
+                <input id="settings-workspace-name" placeholder="Ex : Camarade de travail" />
+              </label>
+
+              <div class="grid-2">
+                <label class="field-label">
+                  <span>Apparence</span>
+                  <select id="settings-theme" class="input-like">
+                    <option value="dark">Sombre</option>
+                    <option value="light">Clair</option>
+                    <option value="system">Selon l’appareil</option>
+                  </select>
+                </label>
+
+                <label class="field-label">
+                  <span>Langue des réponses</span>
+                  <select id="settings-language" class="input-like">
+                    <option value="fr">Français</option>
+                    <option value="en">Anglais</option>
+                    <option value="auto">Automatique</option>
+                  </select>
+                </label>
+              </div>
+
+              <label class="field-label">
+                <span>Style de réponse de l’assistant</span>
+                <select id="settings-tone" class="input-like">
+                  <option value="professional">Professionnel</option>
+                  <option value="simple">Simple et clair</option>
+                  <option value="detailed">Très détaillé</option>
+                  <option value="direct">Direct et court</option>
+                </select>
+              </label>
+
+              <button class="btn btn-primary" onclick="saveAppSettings()">Sauvegarder les paramètres</button>
+              <button class="btn btn-soft" onclick="resetAppSettings()">Réinitialiser</button>
+              <div id="settings-msg" class="message"></div>
+            </div>
+
+            <div class="panel">
+              <div class="settings-section-title">
+                <div>
+                  <h3>Paramètres Gmail par défaut</h3>
+                  <p>Choisis combien d’emails WorkMate lit par défaut et sur quelle période.</p>
+                </div>
+              </div>
+
+              <div class="grid-2">
+                <label class="field-label">
+                  <span>Période Gmail par défaut</span>
+                  <select id="settings-gmail-query" class="input-like">
+                    <option value="in:inbox newer_than:7d">Boîte de réception — 7 jours</option>
+                    <option value="in:inbox newer_than:30d">Boîte de réception — 30 jours</option>
+                    <option value="in:inbox newer_than:90d">Boîte de réception — 90 jours</option>
+                    <option value="in:inbox">Boîte de réception — tout</option>
+                    <option value="">Tout Gmail accessible</option>
+                  </select>
+                </label>
+
+                <label class="field-label">
+                  <span>Nombre d’emails par défaut</span>
+                  <select id="settings-gmail-max" class="input-like">
+                    <option value="50">50 emails</option>
+                    <option value="100">100 emails</option>
+                    <option value="200">200 emails</option>
+                    <option value="500">500 emails</option>
+                    <option value="1000">1 000 emails</option>
+                    <option value="2000">2 000 emails</option>
+                    <option value="all">Tout Gmail accessible</option>
+                  </select>
+                </label>
+              </div>
+
+              <button class="btn btn-primary" onclick="saveAppSettings()">Sauvegarder Gmail</button>
+              <button class="btn btn-soft" onclick="resetGmailToken()">Déconnecter Gmail</button>
+              <div id="gmail-settings-msg" class="message"></div>
+            </div>
+
+            <div class="panel">
+              <div class="settings-section-title">
+                <div>
+                  <h3>Sécurité</h3>
+                  <p>Modifie ton mot de passe si ton compte utilise une connexion email/mot de passe.</p>
+                </div>
+              </div>
+
+              <input id="new-pass" type="password" placeholder="Nouveau mot de passe" />
+              <input id="confirm-pass" type="password" placeholder="Confirmer" />
+              <button class="btn btn-soft" onclick="changePassword()">Changer le mot de passe</button>
+              <div id="pass-msg" class="message"></div>
+            </div>
+
+            <div class="panel">
+              <div class="settings-section-title">
+                <div>
+                  <h3>Confidentialité</h3>
+                  <p>Gère Gmail, les conversations locales, les documents et les exports.</p>
+                </div>
+              </div>
+              <button class="btn btn-primary" onclick="switchView('privacy')">Ouvrir les paramètres de confidentialité</button>
+              <button class="btn btn-soft" onclick="switchView('security')">Sécurité avancée</button>
+              <button class="btn btn-soft" onclick="switchView('teams')">Équipe</button>
+              <button class="btn btn-soft" onclick="switchView('memory')">Mémoire longue durée</button>
+              <button class="btn btn-soft" onclick="switchView('admin')">Espace admin</button>
+            </div>
+
+            <div class="panel logout-profile-panel">
+              <div class="settings-section-title">
+                <div>
+                  <h3>Session</h3>
+                  <p>Déconnecte ton compte WorkMate de cet appareil.</p>
+                </div>
+              </div>
+              <button class="btn btn-danger" onclick="doLogout()">Se déconnecter</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
+
+  <div id="command-palette" class="command-palette" style="display:none">
+    <div class="command-box">
+      <input id="command-input" placeholder="Rechercher une commande... Ctrl + K" oninput="renderCommandPalette()" onkeydown="handleCommandKey(event)" />
+      <div id="command-results" class="command-results"></div>
+    </div>
+  </div>
+
+  <div id="onboarding-modal" class="onboarding-modal" style="display:none">
+    <div class="onboarding-card">
+      <h2>Configurer WorkMate</h2>
+      <p>Choisis ton profil pour adapter l'assistant.</p>
+
+      <div class="grid-2">
+        <select id="onboarding-role" class="input-like">
+          <option value="entrepreneur">Entrepreneur</option>
+          <option value="student">Étudiant</option>
+          <option value="association">Association</option>
+          <option value="developer">Développeur</option>
+          <option value="employee">Salarié</option>
+        </select>
+
+        <select id="onboarding-tone" class="input-like">
+          <option value="professional">Professionnel</option>
+          <option value="simple">Simple</option>
+          <option value="detailed">Détaillé</option>
+          <option value="direct">Direct</option>
+        </select>
+      </div>
+
+      <input id="onboarding-company" placeholder="Entreprise / association / école" />
+      <textarea id="onboarding-goals" placeholder="Tes objectifs principaux avec WorkMate..."></textarea>
+
+      <button class="btn btn-primary" onclick="completeOnboarding()">Terminer</button>
+      <button class="btn btn-ghost" onclick="skipOnboarding()">Passer</button>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+  <div id="workmate-toast" class="workmate-toast"></div>
+</body>
+</html>
